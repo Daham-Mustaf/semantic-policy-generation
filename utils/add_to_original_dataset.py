@@ -1,4 +1,3 @@
-# scripts/add_to_original_dataset.py
 """
 Add new spatial policy to original dataset format
 """

@@ -1,4 +1,4 @@
-# scripts/add_spatial_policy.py
+
 """
 Add one more spatial conflict policy to balance the dataset
 """

@@ -1,4 +1,3 @@
-# scripts/check_azure_models.py
 
 """
 Check which models are deployed in Azure OpenAI

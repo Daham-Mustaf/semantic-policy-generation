@@ -361,7 +361,7 @@ def main():
     with open(input_file, 'r', encoding='utf-8') as f:
         old_policies = json.load(f)
     
-    print(f"\n📥 Loaded {len(old_policies)} policies")
+    print(f"\n Loaded {len(old_policies)} policies")
     
     # Convert all policies
     unified_policies = []
@@ -423,8 +423,8 @@ def main():
         json.dump(output, f, indent=2, ensure_ascii=False)
     
     # Print statistics
-    print(f"\n✅ Successfully converted {len(unified_policies)} policies")
-    print(f"💾 Saved to: {output_file}")
+    print(f"\nSuccessfully converted {len(unified_policies)} policies")
+    print(f"Saved to: {output_file}")
     
     print("\n" + "=" * 80)
     print("CONFLICT DISTRIBUTION")
@@ -446,7 +446,7 @@ def main():
     for pattern, count in sorted(pattern_distribution.items(), key=lambda x: x[1], reverse=True)[:10]:
         print(f"{pattern:50s}: {count:3d}")
     
-    print("\n✅ Unification complete!")
+    print("\n Unification complete!")
 
 
 if __name__ == "__main__":
