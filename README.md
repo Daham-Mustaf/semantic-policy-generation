@@ -1,6 +1,6 @@
 # ODRL Policy-Reasoning Agents
 
-Anonymous repository for ESWC 2025 submission: **"Intent-to-Policy: An Ontology-Grounded Agentic AI System for Reliable ODRL Generation and Validation"**
+Anonymous repository: **"Intent-to-Policy: An Ontology-Grounded Agentic AI System for Reliable ODRL Generation and Validation"**
 
 ## Overview
 

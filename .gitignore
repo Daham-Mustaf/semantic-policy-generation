@@ -106,4 +106,4 @@ models/
 
 Thumbs.db
 .DS_Store
-desktop.ini
+desktop.ini.env 
