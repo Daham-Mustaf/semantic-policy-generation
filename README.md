@@ -4,7 +4,31 @@ Anonymous repository: **"Intent-to-Policy: An Ontology-Grounded Agentic AI Syste
 
 ## Overview
 
-Multi-agent system for transforming natural language policy descriptions into W3C ODRL 2.2 compliant machine-readable policies. Addresses three critical challenges in automated policy generation:
+A multi-agent system for transforming natural language policy requirements into validated ODRL (Open Digital Rights Language) policies using specialized LLM agents with ontology-grounded reasoning.
+
+### System Architecture
+
+```
+Natural Language → [Reasoning Agent] → [Generation Agent] → [Validation Agent] → Valid ODRL Policy
+```
+
+The framework decomposes ODRL policy generation into three specialized agents:
+
+```
+f_reason:    (x, ω) → (x', d, φ)    [6-Phase Conflict Detection]
+f_generate:  (x', ω) → y'            [Ontology-Grounded ODRL Generation]
+f_validate:  (y', s) → y             [SHACL-Based Validation]
+```
+
+Where:
+- `x`: Natural language policy requirements
+- `ω`: Semantic context (ODRL ontology, domain knowledge)
+- `x'`: Structured requirements
+- `d`: Decision (APPROVED/REJECTED/NEEDS_INPUT)
+- `φ`: Conflict feedback
+- `y'`: Draft ODRL policy
+- `y`: Validated ODRL policy
+- `s`: SHACL validation shapes
 
 1. **Semantic conflicts in natural language** (spatial hierarchies, temporal overlaps, action subsumption)
 2. **LLM vocabulary hallucination** (generating non-existent ODRL terms)
