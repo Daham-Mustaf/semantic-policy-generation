@@ -1,0 +1,1623 @@
+{
+  "dataset_info": {
+    "name": "ODRL Valid Policy Dataset - Unified Format",
+    "version": "1.0",
+    "total_policies": 83,
+    "creation_date": "2025-12-04",
+    "description": "Standardized approved policies for generation and validation evaluation"
+  },
+  "policies": [
+    {
+      "policy_id": "drk_connector_based_access_policy_01",
+      "policy_text": "Access to the dataset 'MuseumArtifact' is granted only to approved UC4 dataspace participants. Participants must connect using registered connectors listed in the UC4 dataspace registry (e.g., 'https://uc4-dataspace.example.com/connector1'). Connections from unregistered endpoints are automatically denied.",
+      "source": "DRK",
+      "category": "connector_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Access is restricted to registered connectors and approved participants, ensuring measurable and enforceable constraints without ambiguity.",
+        "acceptance_reason": "Policy clearly defines technical access constraints",
+        "original_category": "technical_constraint_policy",
+        "odrl_features": [
+          "connector_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_role_based_access_policy_02",
+      "policy_text": "Access to the dataset 'CulturalHeritageImages2020' is permitted only for users registered as researchers in the DRK Dataspace program.",
+      "source": "DRK",
+      "category": "role_based_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Only registered researchers may access the data. Verification is unambiguous and enforceable via ID checks.",
+        "acceptance_reason": "Role and verification mechanism clearly defined",
+        "original_category": "role_constraint_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "role_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_time_based_access_policy_03",
+      "policy_text": "Access to 'RareBooksCollection' is permitted between June 1, 2025, and December 1, 2026. Users must anonymize the 'name' field in any derived dataset before storage.",
+      "source": "DRK",
+      "category": "temporal_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Start/end dates provide enforceable temporal boundaries, and anonymization requirement ensures privacy without ambiguity.",
+        "acceptance_reason": "Temporal and data transformation requirements clearly defined",
+        "original_category": "temporal_constraint_policy",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_purpose_limited_access_policy_04",
+      "policy_text": "The 'OralTraditionsArchive' dataset may be used only for educational purposes. Commercial use is prohibited. Verification is performed on declared purpose at the point of access.",
+      "source": "DRK",
+      "category": "purpose_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Clear purpose restriction prevents ambiguity, with technical enforcement possible through access logging and purpose declaration.",
+        "acceptance_reason": "Usage purpose explicitly defined and enforceable",
+        "original_category": "purpose_constraint_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_digitization_fee_policy_05",
+      "policy_text": "Münzkabinett Museum must pay a fee of 500 euros for digitization of the 'Todestag' artwork. Payment verification is required before access.",
+      "source": "DRK",
+      "category": "financial_obligations",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies amount, party, and service. Enforcement is measurable and unambiguous.",
+        "acceptance_reason": "Financial obligation clearly defined",
+        "original_category": "financial_obligation_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "financial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_purpose_based_no_fee_policy_06",
+      "policy_text": "Selected cultural datasets are available free of charge if used solely for non-commercial marketing purposes to enhance the institution's visibility. Purpose is verified via submitted use declaration.",
+      "source": "DRK",
+      "category": "conditional_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Access condition clearly defined and verifiable; the policy is enforceable without ambiguity.",
+        "acceptance_reason": "Conditional access tied to verifiable purpose",
+        "original_category": "conditional_access_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_archive_event_access_policy_07",
+      "policy_text": "Access to 'ArchiveArtifact' datasets is allowed only if the declared purpose corresponds to an ArchiveEvent. Semantic classification of declared purpose is verified using the DRK ontology.",
+      "source": "DRK",
+      "category": "semantic_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Access control is based on verifiable semantic class; the policy is specific, measurable, and implementable.",
+        "acceptance_reason": "Semantic constraint explicitly verifiable",
+        "original_category": "semantic_class_constraint_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_redistribution_geo_policy_08",
+      "policy_text": "Access to the 'UC4 Partner' dataset is allowed only before January 1, 2030, 09:00:01. Dataset usage is restricted to users physically located in Germany, verified via IP geolocation.",
+      "source": "DRK",
+      "category": "multi_constraint",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Future date and location restriction are both precise and enforceable, with no contradictions.",
+        "acceptance_reason": "Temporal and geographic constraints measurable and consistent",
+        "original_category": "multi_constraint_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "spatial_constraint",
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_view_limit_policy_09",
+      "policy_text": "UC4 partners may view a maximum of 50 images per calendar day from the 'Daten Raumkultur' dataset. Count resets at midnight local time.",
+      "source": "DRK",
+      "category": "usage_limits",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Quantitative limit is enforceable and measurable; the reset interval avoids ambiguity.",
+        "acceptance_reason": "Numerical usage limit and reset interval clearly defined",
+        "original_category": "quantitative_limit_policy",
+        "odrl_features": [
+          "count_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_connector_flex_policy_10",
+      "policy_text": "Access via the 'Daten Raumkultur Connector' is permitted exclusively for the named UC4 Partner. No additional restrictions apply to the number of connector instances they operate.",
+      "source": "DRK",
+      "category": "exclusive_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Exclusive access to a defined actor is clearly stated and measurable. No ambiguities in connector instance count.",
+        "acceptance_reason": "Exclusive access rights clearly scoped",
+        "original_category": "exclusive_access_policy",
+        "odrl_features": [
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_uc4_limited_use_policy_11",
+      "policy_text": "The UC4 Partner may use the dataset 'http://w3id.org/drk/ontology/d1234' up to 30 times. Each usage must be logged for audit purposes.",
+      "source": "DRK",
+      "category": "count_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies exact count limit and requires logging, making the policy measurable and enforceable without ambiguity.",
+        "acceptance_reason": "Numerical usage limit is clearly defined and enforceable",
+        "original_category": "usage_count_policy",
+        "odrl_features": [
+          "count_constraint",
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_uc4_anonymized_image_data_policy_12",
+      "policy_text": "UC4 Partner may access the image dataset 'http://w3id.org/drk/ontology/d1234' solely for training and evaluation. All images must be anonymized before usage to remove identifiable information.",
+      "source": "DRK",
+      "category": "data_transformation",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies both purpose and anonymization requirement. Enforcement is measurable and ensures privacy without ambiguity.",
+        "acceptance_reason": "Purpose-limited access with clear privacy requirements",
+        "original_category": "data_transformation_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "duty_logging",
+          "duty_deletion"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_staatstheater_usage_policy_13",
+      "policy_text": "Subscribers of the 'ShowTimesAPI' at DE_Staatstheater_Augsburg, including 'Culture Research Institute' and 'Cultural Platform Bavaria', may access cultural assets. Access limited to Germany, expires on May 10, 2025.",
+      "source": "DRK",
+      "category": "multi_dimension",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "All constraints are measurable and enforceable; expiration date is in the future relative to current time.",
+        "acceptance_reason": "Actors, geography, and expiration clearly defined",
+        "original_category": "multi_dimension_access_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "purpose_constraint",
+          "spatial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_skulpturensammlung_public_access_policy_14",
+      "policy_text": "Public access is allowed to digital reproductions of 'Große Düne' by C. D. Friedrich. Museum Münzkabinett may view, download, and share images for non-commercial purposes.",
+      "source": "DRK",
+      "category": "public_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Access actions and non-commercial limitation are enforceable without ambiguity.",
+        "acceptance_reason": "Specific asset, actions, and usage limitations clearly defined",
+        "original_category": "public_access_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_educational_program_policy_15",
+      "policy_text": "DE_Staatstheater_Augsburg provides free access to 'HistoricalArchives' for educational purposes and scientific research. Scholars may explore the dataset without fees.",
+      "source": "DRK",
+      "category": "fee_waiver",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Conditional access is clearly defined with measurable beneficiaries and no ambiguity.",
+        "acceptance_reason": "Fee waiver tied to verifiable purpose",
+        "original_category": "purpose_based_fee_waiver_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "financial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_munzkabinett_authenticated_access_policy_16",
+      "policy_text": "Users must register with ORCID or email to access the ArchiveEvent repository at Münzkabinett. Only authenticated users may view or download the dataset.",
+      "source": "DRK",
+      "category": "authentication",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies credentials and permitted actions. Enforcement is straightforward and unambiguous.",
+        "acceptance_reason": "Authentication requirements are clearly specified",
+        "original_category": "authentication_requirement_policy",
+        "odrl_features": [],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_hybrid_access_pipeline_policy_17",
+      "policy_text": "Approved data scientists may access MedResearch clinical trial data for secondary analysis after: 1) anonymization, 2) Ethics Committee approval, 3) use on secured servers, 4) pre-publication review 14 days before release. Access duration: 180 days from approval.",
+      "source": "DRK",
+      "category": "multi_stage_workflow",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Each stage has specific, enforceable requirements. No contradictions exist between conditions.",
+        "acceptance_reason": "Comprehensive workflow with measurable requirements",
+        "original_category": "complex_multi_stage_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "activity_logging_policy_18",
+      "policy_text": "Consumer at https://www.example.com/consumer must inform provider at https://www.example.com/provider each time 'File 1' is used.",
+      "source": "synthetic",
+      "category": "activity_logging",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Defines a measurable obligation for transparency, supporting accountability and enforceability.",
+        "acceptance_reason": "Clear requirement for reporting usage events",
+        "original_category": "activity_logging_policy",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "deletion_requirement_policy_19",
+      "policy_text": "Consumer must delete 'https://www.example.com/data1.csv' before 2027-07-10T00:00:00Z, as specified by provider.",
+      "source": "synthetic",
+      "category": "deletion_requirements",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Temporal obligation is specific, measurable, and enforceable, ensuring compliance with data minimization principles.",
+        "acceptance_reason": "Deletion deadline clearly defined",
+        "original_category": "deletion_requirement_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "duty_deletion"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "up_to_dateness_policy_20",
+      "policy_text": "Provider must update 'File 1' every 30 seconds to maintain freshness. Update logs must be recorded.",
+      "source": "synthetic",
+      "category": "data_freshness",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Enforceable and quantifiable, ensuring dataset remains current without contradictions.",
+        "acceptance_reason": "Update interval is clearly defined and measurable",
+        "original_category": "up_to_dateness_policy",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "data_quality_policy_21",
+      "policy_text": "Provider may distribute 'File 1' only after SHACL validation using shape at http://example.com/shacl-shape. Quality check occurs before usage or sharing.",
+      "source": "synthetic",
+      "category": "data_quality",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "SHACL validation is a measurable precondition, ensuring data integrity and consistency.",
+        "acceptance_reason": "Enforceable quality control step defined",
+        "original_category": "data_quality_policy",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "data_aggregation_policy_22",
+      "policy_text": "Consumer must aggregate 100% of 'File 1' when using the dataset. Aggregation logs must be retained.",
+      "source": "synthetic",
+      "category": "data_aggregation",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies complete aggregation requirement, measurable and enforceable without ambiguity.",
+        "acceptance_reason": "Aggregation obligation clearly quantified",
+        "original_category": "data_aggregation_policy",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "read_limit_policy_23",
+      "policy_text": "Consumer may read up to 1024 MiB of 'File 1'. System logs must track cumulative read size.",
+      "source": "synthetic",
+      "category": "usage_limits",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Enforceable via monitoring read operations; limit is precise and measurable.",
+        "acceptance_reason": "Numerical limit on read operations clearly defined",
+        "original_category": "quantitative_limit_policy",
+        "odrl_features": [
+          "count_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "bandwidth_limit_policy_24",
+      "policy_text": "Consumer may read 'File 1' at a maximum bandwidth of 20 MBit/s. Bandwidth usage is monitored per session.",
+      "source": "synthetic",
+      "category": "bandwidth_limits",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Quantitative limit on data transfer ensures fair usage; monitoring allows enforcement without ambiguity.",
+        "acceptance_reason": "Bandwidth limit measurable and enforceable",
+        "original_category": "bandwidth_constraint_policy",
+        "odrl_features": [
+          "count_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "concurrent_connection_limit_policy_25",
+      "policy_text": "Consumer may maintain up to 5 concurrent active connections to 'File 1'. Connections beyond limit are rejected automatically.",
+      "source": "synthetic",
+      "category": "connection_limits",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Max connections enforceable technically; policy is precise and measurable.",
+        "acceptance_reason": "Concurrent connection limit clearly defined",
+        "original_category": "concurrent_connection_constraint_policy",
+        "odrl_features": [
+          "count_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "mobility_dataspace_read_policy_26",
+      "policy_text": "Access to 'File 1' is permitted only to members of the 'Mobility Dataspace'. Provider is https://www.example.com/provider.",
+      "source": "MDS",
+      "category": "membership_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Membership verification allows enforceable access control with no ambiguity.",
+        "acceptance_reason": "Membership requirement clearly specified",
+        "original_category": "membership_constraint_policy",
+        "odrl_features": [
+          "role_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_multi_stage_fee_policy_27",
+      "policy_text": "Access to selected datasets may require sequential conditions: 1) fee payment, 2) authentication, 3) purpose declaration. Each step must be verified before granting access.",
+      "source": "DRK",
+      "category": "multi_stage_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Each condition is measurable, sequential, and enforceable without contradictions, ensuring practical implementation.",
+        "acceptance_reason": "Sequential, enforceable conditions clearly defined",
+        "original_category": "multi_stage_access_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "purpose_constraint",
+          "financial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_approved_researcher_access_policy_28",
+      "policy_text": "Access to datasets such as 'ImageArtwork', 'PhysicalArtwork', and 'ArchiveEvent' is permitted only to approved researchers affiliated with recognized institutions or registered dataspace participants. All other users are denied access.",
+      "source": "DRK",
+      "category": "role_based_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy establishes clear role-based constraints, specifying the permitted users (approved researchers, university members, dataspace participants) and denying all others. The constraint is measurable and enforceable, making it a realistic and implementable access control rule within the DRK dataspace framework.",
+        "acceptance_reason": "Policy clearly defines access based on specific roles or membership",
+        "original_category": "role_constraint_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "role_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_activity_logging_policy_29",
+      "policy_text": "All data consumers accessing 'ArchiveEvent' datasets must log every read or download action and notify the provider within 24 hours of access.",
+      "source": "DRK",
+      "category": "activity_logging",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy establishes a measurable obligation for logging and reporting all dataset access events. The 24-hour notification requirement is precise and enforceable, ensuring transparent use without ambiguity.",
+        "acceptance_reason": "Policy enforces accountability and transparency for data usage",
+        "original_category": "activity_logging_policy",
+        "odrl_features": [
+          "spatial_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_deletion_requirement_policy_30",
+      "policy_text": "The data consumer must permanently delete the dataset 'SensitiveCulturalData' by 2026-12-31T23:59:59Z after project completion, as mandated by the provider.",
+      "source": "DRK",
+      "category": "deletion_requirements",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy specifies a precise deletion deadline to comply with data minimization principles. The constraint is unambiguous and technically feasible, aligning with standard ethical and legal requirements.",
+        "acceptance_reason": "Policy defines a clear temporal data retention limit",
+        "original_category": "deletion_requirement_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "duty_deletion"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_data_aggregation_policy_31",
+      "policy_text": "When using the dataset 'MuseumRecords', the consumer is required to aggregate all records for statistical analysis and reporting purposes.",
+      "source": "DRK",
+      "category": "data_aggregation",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy defines a specific and enforceable duty to aggregate the dataset completely. The requirement is quantifiable, supporting consistent data analysis and preventing partial usage that could lead to misinterpretation.",
+        "acceptance_reason": "Policy sets a clear, measurable obligation for aggregation",
+        "original_category": "data_aggregation_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_concurrent_connection_limit_policy_32",
+      "policy_text": "Access to the dataset 'HighResImages' is limited to a maximum of 3 concurrent connections per consumer to avoid server overload.",
+      "source": "DRK",
+      "category": "connection_limits",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy establishes a measurable constraint on concurrent usage, ensuring technical stability and enforceability. The limit is clear and implementable without ambiguity.",
+        "acceptance_reason": "Policy defines a precise limit on simultaneous connections",
+        "original_category": "concurrent_connection_constraint_policy",
+        "odrl_features": [
+          "count_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_time_based_access_policy_33",
+      "policy_text": "The dataset 'TemporaryExhibitionImages' may only be accessed between 2025-06-01 and 2025-12-31. Access outside this window is strictly prohibited.",
+      "source": "DRK",
+      "category": "temporal_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy defines precise temporal constraints for dataset access. The start and end dates are explicit and enforceable, ensuring the policy can be implemented without ambiguity or contradiction.",
+        "acceptance_reason": "Policy clearly specifies access time window",
+        "original_category": "temporal_constraint_policy",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "cc_by_4_0_policy_34",
+      "policy_text": "The dataset 'DRK_CulturalImages' is assigned by the dataset creator (assigner) and may be used by all registered DRK dataspace participants (assignees). The dataset is licensed under CC-BY 4.0: users may share and adapt the data for any purpose, provided proper attribution is given to the assigner. No restrictions apply beyond attribution.",
+      "source": "CC",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy represents the standard CC-BY 4.0 license in a cultural data space context. Permissions include sharing and derivative works; duty requires attribution to the assigner; no prohibitions. Assigners and assignees are explicitly stated for clarity and enforcement.",
+        "acceptance_reason": "Policy provides clear CC-BY 4.0 licensing terms with assigner and assignee clearly defined",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "cc_by_nc_4_0_policy_35",
+      "policy_text": "The dataset 'DRK_HeritageDocuments' is assigned by the dataset creator (assigner) and may be accessed by all verified DRK dataspace participants (assignees). Licensed under CC-BY-NC 4.0, users may share and adapt the dataset for non-commercial purposes only, and attribution to the assigner is mandatory. Commercial use is prohibited.",
+      "source": "CC",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces CC-BY-NC 4.0 licensing: sharing and derivative works allowed for non-commercial purposes; duty requires attribution; commercial use is prohibited. Assigner and assignee roles are clearly specified for policy enforcement and automated reasoning.",
+        "acceptance_reason": "Policy provides clear non-commercial licensing terms with assigner and assignee explicitly defined",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "cc_by_nc_nd_4_0_policy_36",
+      "policy_text": "The dataset 'DRK_AncientMaps' is assigned by the providing institution (assigner) and may be used by registered DRK dataspace participants (assignees). Licensed under CC-BY-NC-ND 4.0, users may share the dataset non-commercially, must provide attribution to the assigner, and are strictly prohibited from creating derivative works.",
+      "source": "CC",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy represents CC-BY-NC-ND 4.0: sharing allowed non-commercially, attribution required, derivatives prohibited. Roles of assigner and assignee are explicitly mentioned for clarity and implementability.",
+        "acceptance_reason": "Policy enforces non-commercial, no-derivative licensing with assigner and assignee clearly stated",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "cc_by_nc_sa_4_0_policy_37",
+      "policy_text": "The dataset 'DRK_MuseumAudio' is assigned by the data provider (assigner) and accessible to all verified DRK dataspace participants (assignees). Licensed under CC-BY-NC-SA 4.0, users may share and adapt the dataset for non-commercial purposes, must provide attribution to the assigner, and any derivative work must carry the same license as the original. Commercial use is prohibited.",
+      "source": "CC",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces CC-BY-NC-SA 4.0: permissions allow sharing and derivatives for non-commercial purposes; duties include attribution and ShareAlike; commercial use prohibited. Assigner and assignee roles are explicitly included.",
+        "acceptance_reason": "Policy clearly defines non-commercial, share-alike licensing with explicit assigner and assignee",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "cc_by_sa_4_0_policy_38",
+      "policy_text": "The dataset 'DRK_HistoricalPhotographs' is assigned by the dataset creator (assigner) and may be used by all registered participants of the DRK dataspace (assignees). Licensed under CC-BY-SA 4.0, users may share and adapt the dataset for any purpose, provided proper attribution is given to the assigner, and any derivative work must use the same license as the original.",
+      "source": "CC",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy represents CC-BY-SA 4.0: sharing and derivatives allowed for any purpose; duty requires attribution and ShareAlike; no prohibitions beyond those. Assigner and assignee are clearly mentioned to support automated reasoning and compliance checks.",
+        "acceptance_reason": "Policy enforces full sharing and derivative permissions with attribution and share-alike, with assigner and assignee clearly defined",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_cc_by_4_0_policy_50",
+      "policy_text": "The dataset 'HistoricPhotos2024' may be shared and adapted for any purpose by 'CulturalDataConsumer' as assigned by 'NationalArchives'. Attribution must always be given to 'NationalArchives'.",
+      "source": "DRK",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy provides full sharing and derivative permissions under CC-BY 4.0, specifying both the assigner and the assignee for explicit rights enforcement.",
+        "acceptance_reason": "Clear CC-BY 4.0 licensing with assigner and assignee specified",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_cc_by_nc_4_0_policy_51",
+      "policy_text": "The dataset 'MuseumArtifacts' may be shared or adapted non-commercially by 'UniversityResearchLab' with attribution to 'CityMuseum'. Commercial use is prohibited.",
+      "source": "DRK",
+      "category": "creative_commons_licensing",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces CC-BY-NC 4.0 with explicit assigner and assignee, enabling automated validation of non-commercial constraints.",
+        "acceptance_reason": "Non-commercial licensing clearly defined",
+        "original_category": "creative_commons_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_interval_policy_52",
+      "policy_text": "The dataset 'TemporaryExhibitionImages' may only be accessed by 'GalleryPartner' between 2025-06-01 and 2025-12-31. Access outside this window is prohibited.",
+      "source": "DRK",
+      "category": "temporal_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces a strict temporal constraint and defines the assignee for automated access control.",
+        "acceptance_reason": "Policy specifies clear access time window with assignee",
+        "original_category": "temporal_constraint_policy",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_n_times_policy_53",
+      "policy_text": "The dataset 'CulturalEventsData' may be accessed by 'EventResearchTeam' up to 5 times as assigned by 'CityCulturalOffice'. Further access requests are denied.",
+      "source": "DRK",
+      "category": "usage_limit_policy",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This N-times usage policy ensures automated enforcement of access counts for the designated assignee.",
+        "acceptance_reason": "Maximum number of usages clearly defined",
+        "original_category": "usage_limit_policy",
+        "odrl_features": [
+          "count_constraint",
+          "purpose_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_duration_policy_54",
+      "policy_text": "The dataset 'HistoricMaps' may be used by 'GeographyDept' for a duration of 10 hours after download, as assigned by 'NationalLibrary'.",
+      "source": "DRK",
+      "category": "duration_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Duration-based access allows automated enforcement of data use for a defined period for the specified assignee.",
+        "acceptance_reason": "Usage duration clearly specified",
+        "original_category": "duration_constraint_policy",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_until_deletion_policy_55",
+      "policy_text": "The dataset 'TemporaryExhibitionCatalog' may be used by 'ExhibitionTeam' from 2025-05-01 to 2025-10-31. After this period, the dataset must be deleted as assigned by 'MuseumAdmin'.",
+      "source": "DRK",
+      "category": "temporal_with_post_duty",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Combines temporal constraints with a post-duty DELETE action, explicitly assigning rights to the assignee.",
+        "acceptance_reason": "Policy specifies access interval and post-duty deletion",
+        "original_category": "temporal_and_post_duty_policy",
+        "odrl_features": [
+          "temporal_constraint",
+          "duty_logging",
+          "duty_deletion"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_logging_policy_56",
+      "policy_text": "Access to the dataset 'CulturalHeritageAudio' by 'AudioResearchTeam' must be logged to the clearing house as assigned by 'CityArchives'.",
+      "source": "DRK",
+      "category": "usage_logging",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces usage logging for accountability, specifying both assigner and assignee.",
+        "acceptance_reason": "Logging requirements clearly specified",
+        "original_category": "logging_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_notification_policy_57",
+      "policy_text": "When 'DigitalArtTeam' accesses the dataset 'DigitalArtCollection', a notification must be sent to 'https://culturaldata.gov/log' as assigned by 'NationalGallery'.",
+      "source": "DRK",
+      "category": "usage_notification",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Automated notifications allow real-time monitoring of dataset access for the specified assignee.",
+        "acceptance_reason": "Notification URL specified with assigner and assignee",
+        "original_category": "notification_policy",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_connector_restricted_policy_58",
+      "policy_text": "The dataset 'ArchivalPhotos' may only be accessed via the connector 'https://partner-connector.govdata.de' by 'ArchiveResearcher', as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "connector_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Connector-restricted usage ensures the data is only accessible through an authorized endpoint for the specified assignee.",
+        "acceptance_reason": "Policy restricts access to specific connector",
+        "original_category": "connector_restriction_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "role_constraint",
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_security_profile_policy_59",
+      "policy_text": "The dataset 'SensitiveCulturalData' may only be accessed by 'CulturalSecurityTeam' if the connector uses 'TRUST_SECURITY_PROFILE', as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "security_requirements",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces connector security requirements for access by the designated assignee.",
+        "acceptance_reason": "Security level restriction clearly defined",
+        "original_category": "security_profile_policy",
+        "odrl_features": [
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_role_restricted_policy_60",
+      "policy_text": "The dataset 'MuseumInventory' may only be used by users with the role 'Curator' as assigned by 'CityMuseum'.",
+      "source": "DRK",
+      "category": "role_restriction_policy",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Restricting dataset usage to a specific role ensures proper data governance within cultural institutions.",
+        "acceptance_reason": "Role-based access clearly specified",
+        "original_category": "role_restriction_policy",
+        "odrl_features": [
+          "role_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_location_restricted_policy_61",
+      "policy_text": "The dataset 'RegionalArtifacts' may only be accessed within Germany by 'RegionalResearchGroup', as assigned by 'FederalCulturalOffice'.",
+      "source": "DRK",
+      "category": "location_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces geographic constraints to comply with national data sharing regulations.",
+        "acceptance_reason": "Location-based access clearly defined",
+        "original_category": "location_restriction_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "spatial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_purpose_restricted_policy_62",
+      "policy_text": "The dataset 'EthnographicInterviews' may only be used for academic research purposes by 'UniversityAnthropologyDept', as assigned by 'CulturalDataCenter'.",
+      "source": "DRK",
+      "category": "purpose_restriction_policy",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Purpose restriction ensures dataset is used only for the intended research objectives by the designated assignee.",
+        "acceptance_reason": "Purpose-based access clearly defined",
+        "original_category": "purpose_restriction_policy",
+        "odrl_features": [
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_event_restricted_policy_63",
+      "policy_text": "The dataset 'ExhibitionCatalog2025' may only be accessed by 'ExhibitionTeam' during the event dates 2025-08-01 to 2025-08-31, as assigned by 'CityMuseum'.",
+      "source": "DRK",
+      "category": "event_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "This policy enforces temporal access tied to a specific event for the designated assignee.",
+        "acceptance_reason": "Event-based access window clearly defined",
+        "original_category": "event_restriction_policy",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_data_rental_policy_64",
+      "policy_text": "The dataset 'CulturalStatistics2025' may be accessed by 'StatsResearchTeam' under a monthly rental agreement, as assigned by 'FederalCulturalOffice'.",
+      "source": "DRK",
+      "category": "payment_requirements",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Data rental ensures continued access under financial and temporal constraints, assigned to a specific assignee.",
+        "acceptance_reason": "Periodic payment and access rights clearly defined",
+        "original_category": "payment_based_policy",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_provide_access_policy_65",
+      "policy_text": "The dataset 'OpenCulturalData' may be freely accessed by 'AllRegisteredUsers' as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "basic_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Simple permission granting access without restrictions, with assigner and assignee specified.",
+        "acceptance_reason": "Unrestricted access clearly granted",
+        "original_category": "provide_access",
+        "odrl_features": [],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_connector_restricted_policy_66",
+      "policy_text": "The dataset 'ArchivalPhotos' may only be accessed via the connector 'https://partner-connector.govdata.de' by 'ArchiveResearcher', as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "connector_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Restricts dataset access to a defined connector for a specific assignee.",
+        "acceptance_reason": "Access restricted to a specific connector",
+        "original_category": "connector_restricted_usage",
+        "odrl_features": [
+          "purpose_constraint",
+          "role_constraint",
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_application_restricted_policy_67",
+      "policy_text": "The dataset 'MuseumArtifacts3D' may only be used within the application 'VirtualMuseumViewer' by 'MuseumTechTeam', as assigned by 'CityMuseum'.",
+      "source": "DRK",
+      "category": "application_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Ensures dataset is used only within the authorized application by the designated assignee.",
+        "acceptance_reason": "Access restricted to specific application",
+        "original_category": "application_restricted_usage",
+        "odrl_features": [
+          "spatial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_interval_restricted_policy_68",
+      "policy_text": "The dataset 'TemporaryExhibitionImages' may only be accessed by 'GalleryPartner' between 2025-06-01 and 2025-12-31. Access outside this interval is prohibited, as assigned by 'MuseumAdmin'.",
+      "source": "DRK",
+      "category": "temporal_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Defines explicit temporal window for access by the assignee.",
+        "acceptance_reason": "Time interval clearly specified",
+        "original_category": "interval_restricted_usage",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_duration_restricted_policy_69",
+      "policy_text": "The dataset 'HistoricMaps' may be used by 'GeographyDept' for 10 hours after download, as assigned by 'NationalLibrary'.",
+      "source": "DRK",
+      "category": "duration_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Limits access duration from the start time for the designated assignee.",
+        "acceptance_reason": "Duration of usage clearly specified",
+        "original_category": "duration_restricted_usage",
+        "odrl_features": [
+          "temporal_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_location_restricted_policy_70",
+      "policy_text": "The dataset 'RegionalArtifacts' may only be accessed within Germany by 'RegionalResearchGroup', as assigned by 'FederalCulturalOffice'.",
+      "source": "DRK",
+      "category": "location_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Restricts access based on the assignee's physical location.",
+        "acceptance_reason": "Geographic restriction clearly specified",
+        "original_category": "location_restricted_usage",
+        "odrl_features": [
+          "purpose_constraint",
+          "spatial_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_perpetual_sale_policy_71",
+      "policy_text": "The dataset 'CulturalStatistics2024' may be purchased once by 'StatsResearchTeam' for perpetual use, as assigned by 'FederalCulturalOffice'.",
+      "source": "DRK",
+      "category": "perpetual_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies financial and access rights for assignee under a one-time sale.",
+        "acceptance_reason": "One-time purchase granting perpetual access",
+        "original_category": "perpetual_data_sale",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_data_rental_policy_72",
+      "policy_text": "The dataset 'CulturalStatistics2025' may be accessed by 'StatsResearchTeam' under a monthly rental agreement, as assigned by 'FederalCulturalOffice'.",
+      "source": "DRK",
+      "category": "rental_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Defines usage rights over a specified rental period for the designated assignee.",
+        "acceptance_reason": "Periodic access under rental agreement",
+        "original_category": "data_rental",
+        "odrl_features": [
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_role_restricted_policy_73",
+      "policy_text": "The dataset 'MuseumInventory' may only be used by users with the role 'Curator', as assigned by 'CityMuseum'.",
+      "source": "DRK",
+      "category": "role_based_access",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Access limited to specific roles ensures governance of sensitive cultural data.",
+        "acceptance_reason": "Role-based access clearly specified",
+        "original_category": "role_restricted_usage",
+        "odrl_features": [
+          "role_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_purpose_restricted_policy_74",
+      "policy_text": "The dataset 'EthnographicInterviews' may only be used for academic research by 'UniversityAnthropologyDept', as assigned by 'CulturalDataCenter'.",
+      "source": "DRK",
+      "category": "purpose_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Restricts usage to the stated purpose for the assigned assignee.",
+        "acceptance_reason": "Purpose-based access clearly specified",
+        "original_category": "purpose_restricted_usage",
+        "odrl_features": [
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_event_restricted_policy_75",
+      "policy_text": "The dataset 'ExhibitionCatalog2025' may only be accessed by 'ExhibitionTeam' during the event dates 2025-08-01 to 2025-08-31, as assigned by 'CityMuseum'.",
+      "source": "DRK",
+      "category": "event_restrictions",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Enforces temporal access tied to a specific event for the assignee.",
+        "acceptance_reason": "Event-based access window clearly defined",
+        "original_category": "event_restricted_usage",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_n_times_usage_policy_76",
+      "policy_text": "The dataset 'CulturalEventsData' may be accessed up to 5 times by 'EventResearchTeam', as assigned by 'CityCulturalOffice'.",
+      "source": "DRK",
+      "category": "count_constraints",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Limits access count for automated enforcement of usage policy.",
+        "acceptance_reason": "Maximum number of usages clearly defined",
+        "original_category": "restricted_number_of_usages",
+        "odrl_features": [
+          "count_constraint",
+          "purpose_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_security_level_restricted_policy_77",
+      "policy_text": "The dataset 'SensitiveCulturalData' may only be accessed by 'CulturalSecurityTeam' if the connector uses 'BASE_SECURITY_PROFILE', as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "security_requirements",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Enforces connector security requirements for the assignee.",
+        "acceptance_reason": "Security level restriction clearly defined",
+        "original_category": "security_level_restricted_usage",
+        "odrl_features": [
+          "connector_constraint"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_usage_until_deletion_policy_78",
+      "policy_text": "The dataset 'TemporaryExhibitionCatalog' may be used by 'ExhibitionTeam' from 2025-05-01 to 2025-10-31. After this period, it must be deleted as assigned by 'MuseumAdmin'.",
+      "source": "DRK",
+      "category": "temporal_with_deletion",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Enforces temporal usage followed by automated deletion for the assigned assignee.",
+        "acceptance_reason": "Temporal access with post-duty deletion",
+        "original_category": "use_data_and_delete_after",
+        "odrl_features": [
+          "temporal_constraint",
+          "duty_logging",
+          "duty_deletion"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_modify_data_in_transit_policy_79",
+      "policy_text": "The dataset '3DScanData' may only be modified during transmission by 'DataProcessingTeam', as assigned by 'MuseumTechAdmin'.",
+      "source": "DRK",
+      "category": "data_modification_transit",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies the condition under which data may be altered, with assigner and assignee clear.",
+        "acceptance_reason": "Modification allowed only in transit",
+        "original_category": "modify_data_in_transit",
+        "odrl_features": [],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_modify_data_in_rest_policy_80",
+      "policy_text": "The dataset 'CulturalRecordsDB' may only be modified at rest by 'DatabaseAdmin', as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "data_modification_rest",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Specifies conditions for modifying stored data with clear assigner and assignee.",
+        "acceptance_reason": "Modification allowed only at rest",
+        "original_category": "modify_data_in_rest",
+        "odrl_features": [],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_local_logging_policy_81",
+      "policy_text": "Usage of the dataset 'CulturalHeritageAudio' by 'AudioResearchTeam' must be logged locally and sent to the clearing house, as assigned by 'CityArchives'.",
+      "source": "DRK",
+      "category": "activity_logging",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Enforces usage logging for accountability, with assigner and assignee specified.",
+        "acceptance_reason": "Logging requirements clearly specified",
+        "original_category": "local_logging",
+        "odrl_features": [
+          "purpose_constraint",
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "moderate",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_remote_notifications_policy_82",
+      "policy_text": "When 'DigitalArtTeam' accesses the dataset 'DigitalArtCollection', a notification must be sent to 'https://culturaldata.gov/log', as assigned by 'NationalGallery'.",
+      "source": "DRK",
+      "category": "remote_notification",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Automated notifications enable real-time monitoring for the assigned assignee.",
+        "acceptance_reason": "Notification URL specified with assigner and assignee",
+        "original_category": "remote_notifications",
+        "odrl_features": [
+          "duty_logging"
+        ],
+        "permission_type": "permission",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    },
+    {
+      "policy_id": "drk_prohibit_access_policy_83",
+      "policy_text": "Access to the dataset 'RestrictedArchiveDocs' is prohibited for all users, as assigned by 'NationalArchives'.",
+      "source": "DRK",
+      "category": "access_prohibition",
+      "ground_truth": {
+        "expected_outcome": "APPROVED",
+        "conflicts": [],
+        "conflict_primary": null
+      },
+      "metadata": {
+        "acceptance_explanation": "Prevents access completely, clearly specifying assigner.",
+        "acceptance_reason": "Access explicitly denied",
+        "original_category": "prohibit_access",
+        "odrl_features": [],
+        "permission_type": "prohibition",
+        "complexity": "simple",
+        "expected_shacl": "valid"
+      }
+    }
+  ]
+}

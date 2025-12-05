@@ -1,89 +1,108 @@
-# Virtual Environment
-.venv/
-venv/
-ENV/
 
-# Python
+# ============================================
+
+# EVALUATION RESULTS (Don't upload to GitHub)
+
+# ============================================
+
+evaluation/results/
+evaluation/results/**/*.json
+evaluation/results/**/*.csv
+evaluation/results/**/*.txt
+
+# ============================================
+
+# PYTHON
+
+# ============================================
+
+# Byte-compiled / optimized / DLL files
+
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# OS specific files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Virtual environments
 
-# IDE files
-.idea/
-.vscode/
-*.swp
-*.swo
-.project
-.pydevproject
-.settings/
+.venv/
+venv/
+ENV/
+env/
 
-# Logs
-*.log
-logs/
-log/
+# ============================================
 
-# Environment variables and secrets
+# ENVIRONMENT & SECRETS
+
+# ============================================
+
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env
-
-# API keys and sensitive data
-config.ini
-credentials.json
+*.key
+*.pem
 secrets.json
-api_keys.py
 
-# Output directories that might contain sensitive data
-validation_reports/
-reasoning_results/
+# ============================================
 
-# Large data files
-*.csv
-*.json
-*.jsonl
-*.txt
-!requirements.txt
-!Data/
+# IDE & EDITOR
 
-# Temporary files
-*.bak
-*.tmp
-.*.tmp
+# ============================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
 *~
+.DS_Store
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# ============================================
 
-# LLM specific
-model_cache/
-embeddings/
-vector_store/
+# LOGS & TEMP FILES
+
+# ============================================
+
+*.log
+logs/
+temp/
+tmp/
+
+# ============================================
+
+# DATASETS (Optional - if large)
+
+# ============================================
+
+# Uncomment if you don't want to upload datasets
+
+# data/approved_policies/*.json
+
+# data/rejected_policies/*.json
+
+# ============================================
+
+# MODEL FILES (if you download any)
+
+# ============================================
+
+*.ckpt
+*.pth
+*.bin
+models/
+
+# ============================================
+
+# JUPYTER NOTEBOOKS CHECKPOINTS
+
+# ============================================
+
+.ipynb_checkpoints/
+
+# ============================================
+
+# OS
+
+# ============================================
+
+Thumbs.db
+.DS_Store
+desktop.ini
