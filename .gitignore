@@ -41,7 +41,8 @@ env/
 *.key
 *.pem
 secrets.json
-
+# BUT keep the env example file
+!.env.example
 # ============================================
 
 # IDE & EDITOR

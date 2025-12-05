@@ -1,97 +1,74 @@
-[![LangChain](https://img.shields.io/badge/🦜🔗-LangChain-brightgreen.svg)](https://www.langchain.com/)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-![Issues](https://img.shields.io/github/issues/Daham-Mustaf/ODRL_Policy-Reasoning-Agents)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15655986.svg)](https://doi.org/10.5281/zenodo.15655986)
+## Dataset Details
 
+**150 ODRL policy descriptions** covering diverse dataspace scenarios:
 
-# ODRL Policy-Reasoning Agents
+**Conflicting Policies (67 total):**
+- Vagueness: 17 policies (overly broad, unimplementable rules)
+- Temporal: 21 policies (overlapping time constraints)
+- Spatial: 3 policies (geographic hierarchy conflicts)
+- Action Hierarchy: 13 policies (permission/prohibition on related actions)
+- Role Hierarchy: 7 policies (inconsistent party specifications)
+- Circular Dependency: 6 policies (circular approval chains)
 
-An ontology-grounded multi-agent system for reliable Open Digital Rights Language (ODRL) policy generation and validation.
+**Valid Policies (83 total):**
+- Source: DRK (German Culture Dataspace), IDS (International Data Spaces), Mobility Data Space
+- Used for testing Generation and Validation agents
 
-## Overview
+All policies are in JSON format with natural language descriptions.
 
-This framework addresses the challenges of translating natural language policy descriptions into enforceable ODRL representations for data spaces. It employs a three-agent architecture to overcome limitations of direct LLM-based policy generation:
+## Implementation Details
 
-1. **Policy Reasoning Agent** - Detects semantic contradictions and logical conflicts in natural language policy descriptions
-2. **ODRL Generation Agent** - Transforms validated policy structures into ontology-aligned ODRL representations
-3. **ODRL Validation Agent** - Applies SHACL validation to ensure syntactic correctness and semantic soundness
+**Architecture Choices:**
+- **Single-shot prompting:** One LLM call per agent (cost-efficient)
+- **Pydantic validation:** Type-safe structured outputs with JSON Schema
+- **Deterministic SHACL:** PySHACL with RDFS inference for structural validation
+- **SPARQL semantic queries:** Operator-operand compatibility checks
+- **Targeted regeneration:** Fixes only SHACL violations, preserves policy semantics (max 3 attempts)
 
-## Key Features
+**Agent Specialization:**
+- Reasoning Agent: Systematic 6-phase conflict detection
+- Generation Agent: ODRL vocabulary grounding with structural templates
+- Validation Agent: SHACL enforcement with learning-based regeneration
 
-- **Semantic Conflict Detection** - Identifies and resolves six types of policy conflicts:
-  - Vague/overbroad policies (e.g., "everyone can access everything")
-  - Spatial conflicts (e.g., permission in Germany, prohibition in EU)
-  - Temporal conflicts (e.g., overlapping time windows with contradictory rules)
-  - Action conflicts (e.g., permitting "share" while prohibiting "distribute")
-  - Dependency conflicts (e.g., circular approval workflows)
-  - Role/context conflicts (e.g., contradictory permissions across hierarchical roles)
+See paper Section 4 (Methodology) for architectural details.
 
-- **Ontology-Grounded Generation** - Ensures ODRL vocabulary compliance and prevents hallucination
-- **SHACL Validation** - Enforces policy compliance through 10 specialized node shapes with 62 property validations
+## Requirements
 
-## Repository Structure
+- **Python:** 3.9 or higher
+- **API Access:** Azure OpenAI (for GPT-4o) OR OpenAI-compatible endpoint (for open-weight models)
+- **Dependencies:** Managed by `uv` (see `pyproject.toml`)
 
-```
-.
-├── policy_reasoning_agent.py       # Agent 1: Semantic reasoning and conflict detection
-├── policy_reasoning_utils.py       # Utility functions for reasoning agent
-├── odrl_policy_generation_agent.py # Agent 2: ODRL generation from validated structures
-├── odrl_policy_validator_agent.py  # Agent 3: SHACL validation and correction
-├── utils/                          # Shared utility functions
-│   └── data_utils.py               # Data handling utilities
-├── odrl_shacl_shapes/              # SHACL validation rules
-│   └── shacl_shapes.ttl            # SHACL shapes for ODRL validation
-├── Data/                           # Policy datasets
-│   ├── acceptance_policies/        # Valid implementable policies
-│   └── rejection_policies/         # Policies with logical conflicts
-├── agent_reasoning_results/        # Reasoning results by model
-│   ├── gpt-4o/                     # GPT-4o reasoning outputs 
-│   ├── gpt-4o-mini/                # GPT-4o-mini reasoning outputs
-│   ├── gpt-35-turbo/               # GPT-3.5 Turbo reasoning outputs
-│   └── o3-mini/                    # Claude Opus Mini reasoning outputs
-└── agent_generated_odrl/           # Generated ODRL policies by model
-    ├── gpt-4o/                     # GPT-4o ODRL outputs
-    ├── gpt-4o-mini/                # GPT-4o-mini ODRL outputs
-    ├── gpt-35-turbo/               # GPT-3.5 Turbo ODRL outputs
-    └── o3-mini/                    # Claude Opus Mini ODRL outputs
-```
+**Core Dependencies:**
+- `langchain` & `langchain-openai`: LLM integration
+- `pyshacl`: SHACL validation with RDFS inference
+- `rdflib`: RDF graph manipulation
+- `pydantic`: Structured output validation
+- `python-dotenv`: Environment configuration
 
-## Usage
+## Troubleshooting
 
-### Prerequisites
+**Issue:** `ModuleNotFoundError: No module named 'agents'`
+**Fix:** Run commands with `uv run python` instead of `python`
 
-- Python 3.8+
-- Required packages: transformers, rdflib, pyshacl, langgraph, openai
+**Issue:** SHACL validation fails with timeout
+**Fix:** Increase `SHACL_TIMEOUT` in `.env` (default: 30 seconds)
 
-### Basic Usage
+**Issue:** API rate limits
+**Fix:** Add delays between requests or use different API endpoint
 
-1. Run the policy reasoning agent to detect conflicts:
+**Issue:** Open-weight models unavailable
+**Fix:** Requires access to compatible OpenAI endpoint (e.g., Ollama, vLLM, Fraunhofer server)
 
-```python
-python policy_reasoning_agent.py --input-file your_policy.txt --model gpt-4o
-```
+## License
 
-2. Generate ODRL for validated policies:
+MIT License - see LICENSE file
 
-```python
-python odrl_policy_generation_agent.py --input-file validated_policy.json --model gpt-4o --output-format ttl
-```
+## Contact
 
-3. Validate generated ODRL:
+For questions about this code repository, please open an issue.
 
-```python
-python odrl_policy_validator_agent.py --input-file generated_policy.ttl
-```
+For paper-related questions, please refer to the submission system.
 
-## Evaluation Results
+---
 
-The framework has been evaluated on 37 policy statements from the cultural data domain:
-- 20 logically inconsistent policies with various conflict types
-- 17 valid implementable policies
-
-Performance metrics across models (see paper for details):
-- GPT-4o: 97.3% overall accuracy (19/20 conflicts detected, 17/17 valid policies approved)
-- GPT-4o-Mini: 94.6% accuracy
-- GPT-3.5-Turbo: 86.5% accuracy
-- Claude O3-Mini: 94.6% accuracy
-
+**Note:** This is an anonymous repository for peer review. Author information and institutional affiliations are omitted per double-blind review requirements.
