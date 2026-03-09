@@ -5,19 +5,17 @@ Evaluate Multiple Models on ODRL Policy Reasoning
 """
 
 import json
-import os
+import argparse
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Dict
 import sys
-from dotenv import load_dotenv
-
-load_dotenv()
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from agents.reasoner.reasoner_agent import Reasoner
+from evaluation.model_config_loader import load_model_config
 
 
 @dataclass
@@ -162,20 +160,31 @@ def print_comparison(all_metrics: List[SimpleMetrics]):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate configured model on reasoning dataset.")
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        default=None,
+        help="Model id from evaluation/openai-apis/custom_models.json. "
+             "If omitted, uses the first model in that file."
+    )
+    args = parser.parse_args()
+
     print("="*80)
     print(" MULTI-MODEL EVALUATION")
     print("="*80)
     
-    # Load config
-    base_url = os.getenv("LLM_BASE_URL")
-    api_key = os.getenv("LLM_API_KEY")
+    model_config = load_model_config(args.model_id)
+    base_url = model_config["base_url"]
+    api_key = model_config["api_key"]
     
     print(f"\n🔧 Configuration:")
     print(f"   Base URL: {base_url}")
+    print(f"   Active Model: {model_config['model_id']}")
     
     # Load policies once
-    rejected_file = Path("data/rejected_policies/rejected_policies_unified.json")
-    approved_file = Path("data/approved_policies/approved_policies_unified.json")
+    rejected_file = Path("data/rejected_policies/rejected_policies_dataset.json")
+    approved_file = Path("data/approved_policies/approved_policies_dataset.json")
     
     policies = []
     
@@ -193,12 +202,10 @@ def main():
     
     print(f"\n📊 Total: {len(policies)} policies")
     
-    # Models to test
+    # Default behavior: evaluate one model (the first config entry),
+    # switch model using --model-id.
     models_to_test = [
-        # {"name": "DeepSeek R1 70B", "id": "deepseek-r1:70b"},
-        {"name": "GPT-OSS 120B", "id": "gpt-oss:120b"},
-        {"name": "Llama 3.3 70B", "id": "llama3.3:70b"},
-        # {"name": "Llama 3.1 70B", "id": "llama3.1:70b"},
+        {"name": model_config["model_id"], "id": model_config["model_id"]},
     ]
     
     print(f"\n🤖 Testing {len(models_to_test)} models:")

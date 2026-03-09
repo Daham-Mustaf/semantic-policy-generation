@@ -102,21 +102,19 @@ cp .env.example .env
 
 ### Configuration
 
-**Azure OpenAI (GPT-4o):**
+`evaluation/openai-apis/custom_models.json` is ignored by git and is not uploaded to GitHub.
+Use the committed example file to create your local evaluator config:
+
 ```bash
-AZURE_OPENAI_API_KEY=your_key
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_VERSION=2024-10-01-preview
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-2024-11-20
-LLM_MODEL=gpt-4o
+cp evaluation/openai-apis/example_models.json evaluation/openai-apis/custom_models.json
+# Then edit custom_models.json with your real endpoints and API keys
 ```
 
-**OpenAI-Compatible Endpoint (Open-Weight Models):**
-```bash
-LLM_BASE_URL=http://your-endpoint/v1
-LLM_API_KEY=your_key
-LLM_MODEL=deepseek-r1:70b
-```
+`evaluation/openai-apis/example_models.json` contains a complete template with multiple model entries.
+
+Default behavior for all evaluators:
+- If no model is specified, the first entry in `custom_models.json` is used.
+- To switch model, pass `--model-id <value>` (must match an entry's `model_id`).
 
 ### Basic Usage
 ```python
@@ -177,22 +175,36 @@ print(final["final_odrl"])
 
 ### Conflict Detection Evaluation (Table 1)
 ```bash
-# GPT-4o
-uv run python evaluation/evaluate_reasoning.py
+# Uses first model in evaluation/openai-apis/custom_models.json
+uv run python evaluation/evaluate_reasoning_agent.py
 
-# Open-weight models
-uv run python evaluation/evaluate_reasoning.py --model deepseek-r1:70b
-uv run python evaluation/evaluate_reasoning.py --model gpt-oss:120b
-uv run python evaluation/evaluate_reasoning.py --model llama3.3:70b
+# Use a specific configured model
+uv run python evaluation/evaluate_reasoning_agent.py --model-id deepseek-chat
+
+# Quick smoke test: evaluate only first 5 policies
+uv run python evaluation/evaluate_reasoning_agent.py --limit 5
+
+# Evaluate a slice: start from index 20, run next 10 policies
+uv run python evaluation/evaluate_reasoning_agent.py --start 20 --limit 10
 ```
 
 ### Complete Pipeline Evaluation (Table 2)
 ```bash
-# End-to-end evaluation
+# End-to-end evaluation (default: first model config, first 5 approved policies)
 uv run python evaluation/evaluate_pipeline.py
 
-# Multi-model comparison
+# Quick smoke test on first 2 approved policies
+uv run python evaluation/evaluate_pipeline.py --dataset-size 2
+
+# Switch model by model_id
+uv run python evaluation/evaluate_pipeline.py --model-id gpt-oss-120b
+
+# Run full approved dataset
+uv run python evaluation/evaluate_pipeline.py --dataset-size -1
+
+# Other evaluators follow the same model selection behavior
 uv run python evaluation/evaluate_multi_models.py
+uv run python evaluation/evaluate_models.py
 ```
 
 Results saved to: `evaluation/results/{model}_results.json`

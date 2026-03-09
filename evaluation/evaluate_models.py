@@ -5,23 +5,18 @@ Compares different LLMs on reasoning, generation, and validation quality
 """
 
 import json
-import logging
+import argparse
 from pathlib import Path
-from typing import Dict, List, Any
-from dataclasses import dataclass, asdict
-from collections import defaultdict
-import pandas as pd
+from typing import List
+from dataclasses import dataclass
 import sys
-from pathlib import Path
-from langchain_core.messages import HumanMessage
-from openai import AzureOpenAI 
+from openai import OpenAI
 
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from agents.reasoner.reasoner_agent import Reasoner
-# evaluation/evaluate_models.py (FINAL CORRECTED VERSION)
+from evaluation.model_config_loader import load_model_config
 
 
 @dataclass
@@ -56,7 +51,7 @@ class SimpleMetrics:
     errors: int
 
 
-def call_llm_direct(client: AzureOpenAI, model: str, policy_text: str) -> str:
+def call_llm_direct(client: OpenAI, model: str, policy_text: str) -> str:
     """
     Call LLM directly with simple prompt
     Returns: "APPROVE" or "REJECT" or "ERROR"
@@ -100,7 +95,7 @@ Decision:"""
         return "ERROR"
 
 
-def evaluate_single_policy(client: AzureOpenAI, model: str, policy: dict) -> SimpleResult:
+def evaluate_single_policy(client: OpenAI, model: str, policy: dict) -> SimpleResult:
     """Evaluate a single policy"""
     
     policy_id = policy["policy_id"]
@@ -197,14 +192,23 @@ def print_results(all_metrics: List[SimpleMetrics]):
 
 def main():
     """Main evaluation"""
+    parser = argparse.ArgumentParser(description="Simple evaluator using configured model.")
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        default=None,
+        help="Model id from evaluation/openai-apis/custom_models.json. "
+             "If omitted, uses the first model in that file."
+    )
+    args = parser.parse_args()
     
     print("="*100)
     print("ULTRA-SIMPLE MODEL EVALUATION")
     print("="*100)
     
     # Load datasets
-    rejected_file = Path("data/rejected_policies/rejected_policies_unified.json")
-    approved_file = Path("data/approved_policies/approved_policies_unified.json")
+    rejected_file = Path("data/rejected_policies/rejected_policies_dataset.json")
+    approved_file = Path("data/approved_policies/approved_policies_dataset.json")
     
     policies = []
     
@@ -222,19 +226,15 @@ def main():
     
     print(f"\n Total: {len(policies)} policies")
     
-    # Setup Azure OpenAI
-    client = AzureOpenAI(
-        api_key="xx",
-        api_version="2024-10-01-preview",
-        azure_endpoint="https://fhgenie-api-fit-ems30127.openai.azure.com/"
+    # Load model config from custom_models.json
+    model_config = load_model_config(args.model_id)
+    client = OpenAI(
+        api_key=model_config["api_key"],
+        base_url=model_config["base_url"],
     )
     
-    # Models to test
-    models = [
-        {"name": "GPT-4o", "model": "gpt-4o-2024-11-20"},
-        {"name": "GPT-4o-mini", "model": "gpt-4o-mini"},
-        {"name": "GPT-4-Turbo", "model": "gpt-4-turbo-2024-04-09"}
-    ]
+    # Default behavior: one selected model (first entry if --model-id omitted)
+    models = [{"name": model_config["model_id"], "model": model_config["model_id"]}]
     
     all_metrics = []
     

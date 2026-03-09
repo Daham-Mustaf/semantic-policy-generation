@@ -6,14 +6,11 @@ Tests: Reasoner → Generator → Validator
 """
 
 import json
-import os
+import argparse
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Dict, Any
 import sys
-from dotenv import load_dotenv
-
-load_dotenv()
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -21,6 +18,7 @@ sys.path.insert(0, str(project_root))
 from agents.reasoner.reasoner_agent import Reasoner
 from agents.generator.generator import Generator
 from agents.validator.validator_agent import ValidatorAgent
+from evaluation.model_config_loader import load_model_config
 
 
 @dataclass
@@ -37,15 +35,15 @@ class PipelineResult:
     # Generator stage (only if approved)
     generator_ran: bool
     odrl_generated: bool
-    odrl_turtle: str = ""
     
     # Validator stage (only if generated)
     validator_ran: bool
     validation_passed: bool
-    validation_attempts: int = 0
     
     # Overall success
     pipeline_success: bool  # True if: approved → generated → validated
+    validation_attempts: int = 0
+    odrl_turtle: str = ""
     
 
 @dataclass
@@ -264,39 +262,41 @@ def print_pipeline_results(metrics: PipelineMetrics):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Run end-to-end pipeline evaluation.")
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        default=None,
+        help="Model id from evaluation/openai-apis/custom_models.json. "
+             "If omitted, uses the first model in that file."
+    )
+    parser.add_argument(
+        "--dataset-size",
+        type=int,
+        default=5,
+        help="Number of approved policies to evaluate from the start of dataset. "
+             "Use -1 to evaluate all approved policies."
+    )
+    args = parser.parse_args()
+
     print("="*100)
     print("🚀 END-TO-END PIPELINE EVALUATION")
     print("="*100)
     
-    # Load config
-    base_url = os.getenv("LLM_BASE_URL")
-    api_key = os.getenv("LLM_API_KEY")
-    model = os.getenv("LLM_MODEL")
-    
-    # For Azure (GPT-4o), use these instead:
-    use_azure = True  # Set to False for Fraunhofer models
-    
-    if use_azure:
-        azure_config = {
-            "api_key": "xx",
-            "api_version": "2024-10-01-preview",
-            "azure_endpoint": "https://fhgenie-api-fit-ems30127.openai.azure.com/",
-            "model": "gpt-4o-2024-11-20"
-        }
-        model_name = "GPT-4o (Azure)"
-    else:
-        azure_config = {
-            "api_key": api_key,
-            "base_url": base_url,
-            "model": model
-        }
-        model_name = model
+    model_config = load_model_config(args.model_id)
+    llm_config = {
+        "api_key": model_config["api_key"],
+        "base_url": model_config["base_url"],
+        "model": model_config["model_id"],
+    }
+    model_name = model_config["model_id"]
     
     print(f"\n🔧 Configuration:")
     print(f"   Model: {model_name}")
+    print(f"   Base URL: {model_config['base_url']}")
     
     # Load ONLY approved policies (since we're testing generation)
-    approved_file = Path("data/approved_policies/approved_policies_unified.json")
+    approved_file = Path("data/approved_policies/approved_policies_dataset.json")
     
     if not approved_file.exists():
         print(f"\n❌ Error: {approved_file} not found")
@@ -304,15 +304,25 @@ def main():
     
     with open(approved_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
-        policies = data["policies"][:5]  # Test with first 5 policies
-        print(f"   ✓ Loaded {len(policies)} APPROVED policies (testing subset)")
+        all_policies = data["policies"]
+        if args.dataset_size == -1:
+            policies = all_policies
+            print(f"   ✓ Loaded {len(policies)} APPROVED policies (full dataset)")
+        else:
+            if args.dataset_size < 1:
+                raise ValueError("--dataset-size must be >= 1, or -1 for full dataset.")
+            policies = all_policies[:args.dataset_size]
+            print(
+                f"   ✓ Loaded {len(policies)} APPROVED policies "
+                f"(first {args.dataset_size} items)"
+            )
     
     # Initialize all three agents
     print(f"\n🤖 Initializing pipeline agents...")
     
-    reasoner = Reasoner(**azure_config, temperature=0.0)
-    generator = Generator(**azure_config, temperature=0.0)
-    validator = ValidatorAgent(**azure_config, temperature=0.0)
+    reasoner = Reasoner(**llm_config, temperature=0.0)
+    generator = Generator(**llm_config, temperature=0.0)
+    validator = ValidatorAgent(**llm_config, temperature=0.0)
     
     print("   ✓ Reasoner initialized")
     print("   ✓ Generator initialized")

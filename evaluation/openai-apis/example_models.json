@@ -1,0 +1,23 @@
+[
+  {
+    "base_url": "http://your-openai-compatible-endpoint/v1",
+    "model_id": "azure-gpt-4.1",
+    "api_key": "your-api-key",
+    "context_length": 4096,
+    "temperature_default": 0.3
+  },
+  {
+    "base_url": "https://api.deepseek.com",
+    "model_id": "deepseek-chat",
+    "api_key": "your-api-key",
+    "context_length": 4096,
+    "temperature_default": 0.3
+  },
+  {
+    "base_url": "https://chat.kiconnect.nrw/api/v1",
+    "model_id": "gpt-oss-120b",
+    "api_key": "your-api-key",
+    "context_length": 4096,
+    "temperature_default": 0.3
+  }
+]

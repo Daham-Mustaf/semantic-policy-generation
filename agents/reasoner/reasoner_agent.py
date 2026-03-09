@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 class DetectedIssue(BaseModel):
     """Individual detected issue"""
     category: ConflictType
+    conflict_type: Optional[ConflictType] = None
     severity: Literal["high", "low"]
     field: str
     policy_id: Optional[str] = None
@@ -51,113 +52,284 @@ class ReasoningResult(BaseModel):
 # ===== SINGLE COMPREHENSIVE PROMPT =====
 
 SINGLE_SHOT_REASONING_PROMPT = """
-# ODRL POLICY CONFLICT DETECTOR
+You are a universal ODRL Policy Contradiction Detector.
+Your job: Analyze policy sets for ANY logical contradiction, regardless of domain.
 
-**Current Date:** {current_date}
+## CORE ANALYSIS FRAMEWORK
 
-You are an expert at detecting contradictions in ODRL policies. Analyze the policy text systematically through 6 phases, then make a final decision.
+### CURRENT DATE: {current_date}
+
+### SYSTEMATIC CONTRADICTION DETECTION
+
+You must check for contradictions across these dimensions:
+
+#### 1. INTRA-POLICY CONSTRAINT CONFLICTS
+
+**CRITICAL: Check for mutually exclusive constraints within a SINGLE policy:**
+
+If a policy has multiple constraints with different constraint_group values on the same leftOperand, this indicates a contradiction.
+
+**Rule:** If constraint_group is present and multiple constraints have the same leftOperand but different groups, this is a HIGH severity contradiction.
+
+**Example patterns:**
+- Multiple purpose constraints with different constraint_group values
+- Multiple count constraints with different constraint_group values  
+- Multiple temporal constraints with different constraint_group values
+
+If metadata.has_conflicting_constraints is true, examine the constraints array for conflicts.
+
+#### 2. ACTOR CONTRADICTIONS
+**Check if policies conflict on WHO can do something:**
+
+- Same actor given BOTH permission AND prohibition for same action/asset
+- Actor restrictions that overlap: "only UC4" vs "all partners" (if UC4 is a partner)
+- Role hierarchy conflicts: "managers allowed" + "administrators prohibited" + "all managers are administrators"
+- Universal quantifiers: "everyone" vs "nobody", "all users" vs "no users"
+
+**Examples:**
+- "UC4 can access dataset" + "UC4 cannot access dataset"
+- "Only researchers" + "All registered users" (if researchers are users)
+- "Managers allowed" + "All administrators prohibited" + "Managers are administrators"
+
+#### 3. ACTION CONTRADICTIONS
+**Check if policies conflict on WHAT can be done:**
+
+- Same action both permitted AND prohibited on same asset
+- Action hierarchy conflicts: "can use" vs "cannot read" (if use includes read)
+- Contradictory action types: "can modify" + "cannot modify"
+
+**Examples:**
+- "Can read document.pdf" + "Cannot read document.pdf"
+- "Can use dataset" + "Cannot access dataset" (use requires access)
+- "Researchers can modify metadata" + "Metadata must not be modified"
+
+#### 4. ASSET/TARGET CONTRADICTIONS
+**Check if policies conflict on WHICH resources:**
+
+- Same asset subject to contradictory rules
+- Asset hierarchy conflicts: "all datasets" vs "dataset X prohibited"
+
+**Examples:**
+- Permission on dataset:123 + Prohibition on dataset:123
+
+#### 5. TEMPORAL CONTRADICTIONS
+**Check if policies conflict on WHEN:**
+
+- Overlapping time windows with contradictory rules
+- Expired policies (before current date: {current_date})
+- Contradictory time constraints: "until 2025" + "indefinitely"
+- Impossible sequences: "available after 2025" + "can use in 2024"
+
+**Examples:**
+- "Access 9am-5pm" + "Prohibited 2pm-6pm" (overlap: 2-5pm)
+- "Until Jan 1, 2025" + "Indefinitely"
+- "Available only after 2025" + "Can use in 2024 for education"
+- "Permitted before Jan 1, 2020" (current: {current_date}) → EXPIRED
+
+#### 6. SPATIAL/LOCATION CONTRADICTIONS
+**Check if policies conflict on WHERE:**
+
+- Geographic hierarchy conflicts: "allowed in Germany" + "prohibited in EU" (Germany ⊂ EU)
+- Overlapping locations with contradictory rules
+- Location containment: broader region prohibits what narrower region allows
+
+**Examples:**
+- "Access in Germany only" + "Prohibited in all EU countries" (Germany is in EU)
+- "Allowed in Berlin" + "Prohibited in Germany" (Berlin ⊂ Germany)
+
+#### 7. QUANTITATIVE/USAGE LIMIT CONTRADICTIONS
+**Check if policies conflict on HOW MUCH:**
+
+- Contradictory count limits: "30 times" + "unlimited"
+- Contradictory size limits: "max 1024 MiB" + "min 2048 MiB"
+- Contradictory bandwidth: "max 20 Mbit/s" + "min 50 Mbit/s"
+- Contradictory concurrency: "max 5 connections" + "min 10 connections"
+- Percentage conflicts: "aggregate 100%" + "aggregate max 50%"
+
+**Examples:**
+- "Use up to 30 times" + "Unlimited access" (for same actor/asset/action)
+- "Read max 1024 MiB" + "Must read at least 2048 MiB"
+- "Aggregate 100% of File1" + "Aggregate max 50% of File1"
+
+#### 8. PURPOSE/CONSTRAINT CONTRADICTIONS
+**Check if policies conflict on WHY/UNDER WHAT CONDITIONS:**
+
+- Contradictory purposes: "for research" + "not for research"
+- Overlapping purposes: "educational only" + "any purpose"
+- Contradictory constraints: "must inform provider" + "must not inform provider"
+- Data handling conflicts: "delete before July 10" + "retain until Dec 31"
+
+**Examples:**
+- "For research purpose" + "Prohibited for research"
+- "Must inform provider after use" + "Prohibited from informing provider"
+- "Delete before 2023-07-10" + "Retain until 2023-12-31"
+
+#### 9. TECHNICAL FEASIBILITY CONTRADICTIONS
+**Check for technically impossible requirements:**
+
+- Mutually exclusive states: "encrypted" + "plaintext" (same file)
+- Resource impossibilities: "process 8K in 5 seconds on consumer hardware"
+- Quality conflicts: "must conform to SHACL shape X" + "must not conform to SHACL shape X"
+
+**Examples:**
+- "Encrypted with AES-256" + "Stored as plaintext" (single file)
+- "Conform to SHACL shape" + "Must not conform to same shape"
+- "8K conversion + AI analysis + lossless compression in 5s on standard CPU"
+
+#### 10. CIRCULAR DEPENDENCIES
+**Check for approval/process loops:**
+
+- Step A requires Step B, Step B requires Step C, Step C requires Step A
+
+**Example:**
+- "Access needs Committee approval" → "Committee needs Rights verification" → "Rights needs preliminary access"
+
+#### 11. UNMEASURABLE/VAGUE CONDITIONS (HIGH SEVERITY)
+
+**CRITICAL: Policies with unmeasurable conditions MUST be rejected**
+
+Check for undefined or subjective terms that make enforcement impossible:
+
+**Unmeasurable temporal terms (HIGH):**
+- "urgent", "soon", "later", "a while", "sometime", "eventually", "promptly", "quickly"
+- These have no objective definition and cannot be enforced consistently
+
+**Unmeasurable quality terms (HIGH):**
+- "responsibly", "appropriately", "properly", "carefully", "reasonable", "good", "bad"
+- These are subjective and cannot be measured or verified
+
+**Unmeasurable conditions (HIGH):**
+- "if important", "when necessary", "as needed", "when appropriate", "if significant"
+- These lack objective criteria for determination
+
+**Unmeasurable actors (HIGH):**
+- "everyone", "anyone", "nobody", "somebody" (without specific scope)
+- Too broad to enforce practically
+
+**Examples of REJECT cases:**
+- "If request is urgent, expedite" → What defines "urgent"? No measurable criteria
+- "Use data responsibly" → What is "responsible"? Subjective and unenforceable
+- "Access when necessary" → Who determines "necessary"? No objective measure
+- "Everyone can access everything" → No specific scope or constraints
+
+**Why these are HIGH severity:**
+- Implementation teams cannot create consistent enforcement rules
+- Different people will interpret terms differently
+- Creates legal ambiguity and disputes
+- Violates ODRL principle of machine-readable, enforceable policies
+
+**What to suggest:**
+- Replace "urgent" with specific criteria: "submitted within 48 hours of deadline" or "priority level ≥ 5"
+- Replace "responsibly" with specific constraints: "for non-commercial purposes only" or "with proper attribution"
+- Replace "when necessary" with objective triggers: "when storage exceeds 80% capacity"
+- Replace broad actors with specific roles: "registered researchers" instead of "anyone"
+
+#### 12. OVERLY BROAD/VAGUE POLICIES
+**Check for unimplementable generalities:**
+
+- Universal quantifiers without specificity: "everyone can access everything"
+- Total prohibitions: "nobody can do anything"
+- Policies that lack specific actors, assets, or constraints
+
+**Examples:**
+- "Everyone can access everything" (no actors, assets, or constraints defined)
+- "Nobody can do anything" (universal prohibition)
+
+#### 13. INCOMPLETE CONDITION HANDLING
+**Check for missing branches:**
+
+- Policy handles approval but not denial
+- Defines success path but not failure path
+
+**Example:**
+- "Approved requests forwarded to Rights Dept" (no handling for denials)
+
+#### 14. UNENFORCEABLE RULES
+**Check for monitoring impossibility:**
+
+- Mental states: "cannot think about", "must not intend"
+- Private actions: "cannot tell anyone", "cannot discuss privately"
+- Absolute scope: "all copies everywhere destroyed"
+
+**Examples:**
+- "Users cannot tell anyone about data" (cannot monitor speech)
+- "Cannot screenshot" (without DRM/technical controls)
 
 ---
 
-## PHASE 1: CRITICAL VAGUENESS DETECTION (CHECK FIRST!)
+## ANALYSIS METHODOLOGY
 
-### Unmeasurable Terms (HIGH SEVERITY - IMMEDIATE REJECT)
+### Step 1: Check for Intra-Policy Conflicts
+For each policy, check if:
+- metadata.has_conflicting_constraints is true
+- Multiple constraints have same leftOperand but different constraint_group values
+- If YES → HIGH severity contradiction
 
-Scan for these terms that make enforcement impossible:
+### Step 2: Check for Unmeasurable/Vague Terms (CRITICAL)
+Scan the entire policy text and constraints for:
+- Undefined temporal terms: "urgent", "soon", "promptly"
+- Undefined quality terms: "responsibly", "appropriately"
+- Undefined conditions: "if important", "when necessary"
+- If ANY found → HIGH severity, REJECT
 
-**Temporal:** "urgent", "soon", "later", "promptly", "quickly", "eventually"
-**Quality:** "responsibly", "appropriately", "properly", "carefully", "reasonable"  
-**Conditional:** "if important", "when necessary", "as needed", "if significant"
-**Actor:** "everyone", "anyone", "nobody" (without scope)
-**Overly Broad:** "Everyone can access everything", "Nobody can do anything"
+### Step 3: Parse Policy Set
+Extract all policies and their components:
+- Actors (assigner, assignee)
+- Actions (permission, prohibition, duty)
+- Assets (target)
+- Constraints (temporal, spatial, purpose, count, etc.)
 
-**Action:** If ANY found → Mark as Phase 1 issue, set decision to REJECT
+### Step 4: Cross-Reference Policies
+For each pair of policies, check if they share:
+- Same actor? → Check for actor contradictions
+- Same asset? → Check for asset contradictions
+- Same action? → Check for action contradictions
+- Overlapping time? → Check for temporal contradictions
+- Overlapping space? → Check for spatial contradictions
 
----
+### Step 5: Constraint Analysis
+Within each policy and across policies:
+- Are quantitative limits consistent?
+- Are purposes compatible?
+- Are conditions complete and measurable?
+- Are technical requirements feasible?
 
-## PHASE 2: TEMPORAL CONFLICTS
+### Step 6: Temporal Validation
+- Are any policies expired (before {current_date})?
+- Do time windows overlap with contradictory rules?
 
-Check for:
-1. **Expired policies**: Any end_date before {current_date}
-2. **Overlapping contradictions**: "9am-5pm allowed" + "2pm-6pm prohibited" = conflict at 2pm-5pm
-3. **Impossible sequences**: "Available after 2025" + "Use in 2024" = impossible
-
-**Resolution:** Specific-over-general, prohibit-on-ambiguity
-
----
-
-## PHASE 3: SPATIAL CONFLICTS
-
-Check for geographic hierarchy violations:
-- "Permitted in Germany" + "Prohibited in EU" = CONFLICT (Germany ⊂ EU)
-- "Allowed in Berlin" + "Prohibited in Germany" = CONFLICT (Berlin ⊂ Germany)
-
-**Resolution:** Narrower scope takes precedence
-
----
-
-## PHASE 4: ACTION HIERARCHY CONFLICTS
-
-ODRL Action Hierarchy:
-```
-use
-├── reproduce
-├── distribute
-│   └── share (share ⊑ distribute)
-├── modify
-│   └── adapt
-└── read
-```
-
-Check for:
-- "Can share" + "Cannot distribute" = CONFLICT (share is a type of distribute)
-- "Can use" + "Cannot read" = CONFLICT (read is part of use)
-- Same action with both permission AND prohibition
-
-**Resolution:** Prohibition wins
-
----
-
-## PHASE 5: ROLE & PARTY CONFLICTS
-
-Check for:
-- "Managers required" + "Administrators prohibited" + "Managers ⊂ Administrators" = IMPOSSIBLE
-- "Only UC4" + "All partners" (if UC4 is partner) = AMBIGUOUS
-- Same actor with both permission AND prohibition for same action/target
-
-**Resolution:** Apply role hierarchy
-
----
-
-## PHASE 6: CIRCULAR DEPENDENCIES
-
-Check for approval loops:
-- Access → Committee approval → Rights verification → Access = CYCLE
-
-**Resolution:** Break at weakest link
+### Step 7: Enforceability Check
+- Can the policy be monitored?
+- Are technical controls possible?
+- Are conditions measurable?
 
 ---
 
 ## DECISION RULES
 
-**REJECT** if ANY:
-- Unmeasurable/vague terms (Phase 1)
-- High severity conflicts
-- Expired policies
-- Circular dependencies
-- Impossible contradictions
-- Same actor/action/target with both permission AND prohibition
+### REJECT (confidence 0.3-0.7) if ANY:
+1. **Unmeasurable/vague terms present** ("urgent", "soon", "responsibly", "when necessary", etc.)
+2. Intra-policy constraint conflict (has_conflicting_constraints=true with conflicting constraint_group values)
+3. Direct contradiction found (permission + prohibition on same thing)
+4. Quantitative conflicts (30 uses + unlimited)
+5. Temporal conflicts (expired, overlapping contradictions)
+6. Spatial conflicts (geographic hierarchy violation)
+7. Technical impossibility
+8. Circular dependency
+9. Overly broad without specificity
+10. Unenforceable without technical controls
 
-**NEEDS_INPUT** if:
-- Ambiguous terms need clarification
-- Missing information prevents analysis
-- Role/geographic hierarchy unclear
+### NEEDS_INPUT (confidence 0.5-0.7) if:
+- Vague terms exist but could be clarified with user input
+- Ambiguous terms need definition
+- Missing information prevents full analysis
 
-**APPROVE** if:
+### APPROVE (confidence 0.7-1.0) if:
 - No high-severity issues
-- All constraints measurable
-- Policies enforceable
-- No contradictions
+- All terms are measurable and objective
+- All constraints have clear criteria
+- Only low-severity issues (missing optional fields)
+- Policies are enforceable
 
 ---
 
@@ -172,28 +344,42 @@ Check for approval loops:
 
 ## OUTPUT FORMAT
 
-Return ONLY valid JSON (no markdown, no backticks):
+For each issue found, specify:
+- **category**: Which type of contradiction or issue
+- **severity**: Critical, High, Medium or Low
+- **field**: Which field/constraint is involved
+- **policy_id**: Which policy/policies
+- **message**: Clear description of the issue
+- **suggestion**: How to resolve it (with specific measurable criteria)
+- **conflict_type**: Type of conflict detected. **MUST be one of the following 12 specific types if a conflict is detected, otherwise use None:**
 
-{{
-  "decision": "approve|reject|needs_input",
-  "confidence": 0.85,
-  "risk_level": "critical|high|medium|low",
-  "reasoning": "Comprehensive explanation covering all 6 phases",
-  "issues": [
-    {{
-      "category": "unmeasurable_terms",
-      "severity": "high",
-      "field": "constraint.purpose",
-      "policy_id": "implicit_policy_1",
-      "message": "Term 'urgent' is unmeasurable",
-      "suggestion": "Replace 'urgent' with 'priority >= 5' or 'within 48 hours'",
-      "detected_in_phase": 1
-    }}
-  ],
-  "recommendations": [
-    "Specific actionable recommendation 1"
-  ]
-}}
+### CONFLICT TYPE DEFINITIONS (12 types):
+
+1. **unmeasurable_terms** - Policy contains vague, unmeasurable, or subjective terms that cannot be objectively enforced (e.g., "urgent", "soon", "responsibly", "everyone", "nobody", "when necessary")
+
+2. **temporal_overlap** - Conflicting temporal constraints that overlap or contradict each other (e.g., "access 9am-5pm" + "prohibited 2pm-6pm", "until 2025" + "indefinitely", contradictory count/usage limits)
+
+3. **temporal_expired_policy** - Policy has expired (validity period is before current date)
+
+4. **temporal_impossible_sequence** - Temporally impossible sequence of events (e.g., "available after 2025" + "can use in 2024", "delete before X" + "use after X" where X is the same date)
+
+5. **spatial_hierarchy_conflict** - Geographic hierarchy conflicts (e.g., "allowed in Germany" + "prohibited in EU" where Germany is in EU)
+
+6. **spatial_overlap_conflict** - Overlapping spatial locations with contradictory rules
+
+7. **action_hierarchy_conflict** - Action hierarchy conflicts (e.g., "can use" + "cannot read" where use includes read, "can modify" + "cannot modify")
+
+8. **action_subsumption_conflict** - Action subsumption conflicts where one action includes another but policies conflict
+
+9. **role_hierarchy_conflict** - Role hierarchy conflicts (e.g., "managers allowed" + "administrators prohibited" + "all managers are administrators")
+
+10. **party_specification_inconsistency** - Party/actor specification inconsistencies (e.g., "only UC4" + "all registered users" where UC4 is a user)
+
+11. **circular_approval_dependency** - Circular approval or dependency loops (e.g., "Access needs Committee approval" → "Committee needs Rights verification" → "Rights needs preliminary access")
+
+12. **workflow_cycle_conflict** - Workflow cycle conflicts where steps form a circular dependency
+
+**CRITICAL**: If you detect ANY conflict, you MUST set conflict_type to the most specific matching type from the above list. Do NOT use generic terms like "actor_conflict" or "temporal_conflict" - use the specific types listed above.
 
 ---
 
@@ -204,13 +390,16 @@ Return ONLY valid JSON (no markdown, no backticks):
 
 ---
 
-**IMPORTANT:**
-- Return ONLY the JSON object, no other text
-- Work systematically through phases 1-6
-- Be specific about which phase detected each issue
-- Always provide concrete suggestions for fixing issues
+**CRITICAL INSTRUCTIONS:**
+1. FIRST scan for unmeasurable/vague terms - if ANY found → immediate HIGH severity, REJECT
+2. THEN check for intra-policy conflicts (constraint_group with has_conflicting_constraints=true)
+3. Analyze the ENTIRE policy set as one system
+4. Check EVERY dimension of contradiction (actor, action, asset, time, space, quantity, purpose, technical)
+5. Do NOT assume domain-specific logic - detect contradictions universally
+6. Flag ANY logical inconsistency or unmeasurable term as HIGH severity
+7. Return structured JSON with all detected issues
 
-Return your analysis now:
+Return valid JSON with: decision, confidence, issues, recommendations, reasoning, risk_level, policies_analyzed. 
 """
 
 
@@ -308,12 +497,89 @@ class Reasoner:
         logger.info("=" * 60)
         logger.info("REASONING COMPLETE")
         logger.info(f"Decision: {result['decision'].upper()}")
-        logger.info(f"Confidence: {result['confidence']:.0%}")
+        logger.info(f"Confidence: {self._format_confidence_percent(result.get('confidence'))}")
         logger.info(f"Risk Level: {result['risk_level'].upper()}")
         logger.info(f"Total Issues: {len(result['issues'])}")
         logger.info("=" * 60)
         
         return result
+
+    @staticmethod
+    def _normalize_conflict_type(raw_value: Optional[str]) -> Optional[ConflictType]:
+        """Normalize common conflict label aliases emitted by different models."""
+        if not raw_value:
+            return None
+
+        normalized = str(raw_value).strip().lower()
+        aliases = {
+            "temporal_overlap": ConflictType.TEMPORAL_OVERLAP.value,
+            "temporal_conflict": ConflictType.TEMPORAL_OVERLAP.value,
+            "expired_policy": ConflictType.TEMPORAL_EXPIRED.value,
+            "temporal_expired": ConflictType.TEMPORAL_EXPIRED.value,
+            "spatial_conflict": ConflictType.SPATIAL_HIERARCHY.value,
+            "action_conflict_generic": ConflictType.ACTION_CONFLICT.value,
+            "actor_conflict": ConflictType.PARTY_INCONSISTENCY.value,
+            "cross_policy_conflict": ConflictType.PARTY_INCONSISTENCY.value,
+            "usage_limit_conflict": ConflictType.TEMPORAL_OVERLAP.value,
+            "role_conflict": ConflictType.ROLE_HIERARCHY.value,
+            "circular_dependency": ConflictType.CIRCULAR_DEPENDENCY.value,
+            "vague_term": ConflictType.UNMEASURABLE.value,
+            "vague_terms": ConflictType.UNMEASURABLE.value,
+            "ambiguous": ConflictType.PARTY_INCONSISTENCY.value,
+            "conflict": ConflictType.ACTION_CONFLICT.value,
+            "constraint_conflict": ConflictType.ACTION_CONFLICT.value,
+            "overly_broad_policy": ConflictType.VAGUE_BROAD.value,
+            "overly_broad": ConflictType.VAGUE_BROAD.value,
+            "unenforceable": ConflictType.UNMEASURABLE.value,
+            "technical_impossibility": ConflictType.ACTION_CONFLICT.value,
+            "circular_approval_dependency": ConflictType.CIRCULAR_DEPENDENCY.value,
+            "workflow_cycle": ConflictType.WORKFLOW_CYCLE.value,
+        }
+        normalized = aliases.get(normalized, normalized)
+
+        try:
+            return ConflictType(normalized)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _coerce_confidence(value: object, default: float = 0.5) -> float:
+        """Convert model confidence to a safe float in [0.0, 1.0]."""
+        if value is None:
+            return default
+        try:
+            if isinstance(value, str):
+                text = value.strip()
+                if not text:
+                    return default
+                # Accept "85%" and convert to 0.85.
+                if text.endswith("%"):
+                    raw = float(text[:-1].strip())
+                    numeric = raw / 100.0
+                else:
+                    numeric = float(text)
+            else:
+                numeric = float(value)
+
+            # If model returns 85 instead of 0.85, treat as percentage.
+            if numeric > 1.0:
+                if numeric <= 100.0:
+                    numeric = numeric / 100.0
+                else:
+                    return 1.0
+
+            if numeric < 0.0:
+                return 0.0
+            if numeric > 1.0:
+                return 1.0
+            return numeric
+        except (TypeError, ValueError):
+            return default
+
+    @classmethod
+    def _format_confidence_percent(cls, value: object) -> str:
+        """Format confidence robustly for logs, never raising."""
+        return f"{cls._coerce_confidence(value):.0%}"
     
     def _parse_response(self, content: str) -> dict:
         """Parse LLM response into structured result"""
@@ -337,12 +603,31 @@ class Reasoner:
             issues = []
             for issue_dict in result.get("issues", []):
                 try:
+                    raw_conflict_type = issue_dict.get("conflict_type")
+                    # Only conflict_type is treated as the authoritative conflict signal.
+                    # If conflict_type is None/empty, treat as "no conflict" and skip.
+                    if raw_conflict_type in (None, "", "None", "none", "null", "NULL"):
+                        continue
+
+                    resolved_conflict = self._normalize_conflict_type(raw_conflict_type)
+                    if not resolved_conflict:
+                        logger.error(
+                            "Unknown conflict_type in issue: "
+                            f"conflict_type={raw_conflict_type!r}, issue={issue_dict}"
+                        )
+                        continue
+
+                    severity = str(issue_dict.get("severity", "low")).lower()
+                    if severity not in {"high", "low"}:
+                        severity = "low"
+
                     issues.append(DetectedIssue(
-                        category=ConflictType(issue_dict["category"]),
-                        severity=issue_dict["severity"],
+                        category=resolved_conflict,
+                        conflict_type=resolved_conflict,
+                        severity=severity,
                         field=issue_dict.get("field", "unknown"),
                         policy_id=issue_dict.get("policy_id"),
-                        message=issue_dict["message"],
+                        message=issue_dict.get("message", "Conflict detected"),
                         suggestion=issue_dict.get("suggestion"),
                         detected_in_phase=issue_dict.get("detected_in_phase", 0)
                     ))
@@ -350,12 +635,21 @@ class Reasoner:
                     logger.error(f"Failed to parse issue: {e}")
                     continue
             
+            decision = str(result.get("decision", "needs_input")).lower()
+            if decision not in {"approve", "reject", "needs_input"}:
+                decision = "needs_input"
+
+            risk_level = str(result.get("risk_level", "medium")).lower()
+            if risk_level not in {"critical", "high", "medium", "low"}:
+                risk_level = "medium"
+
             return {
-                "decision": result.get("decision", "needs_input"),
-                "confidence": result.get("confidence", 0.5),
-                "risk_level": result.get("risk_level", "medium"),
+                "decision": decision,
+                "confidence": self._coerce_confidence(result.get("confidence", 0.5)),
+                "risk_level": risk_level,
                 "reasoning": result.get("reasoning", ""),
-                "issues": [issue.model_dump() for issue in issues],
+                # mode="json" ensures enums are serialized as their string values.
+                "issues": [issue.model_dump(mode="json") for issue in issues],
                 "recommendations": result.get("recommendations", [])
             }
             
