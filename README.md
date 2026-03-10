@@ -173,39 +173,26 @@ print(final["final_odrl"])
 
 ## Reproducing Paper Results
 
-### Conflict Detection Evaluation (Table 1)
+
+
+### Complete Pipeline Evaluation (Table 1)
+```bash
+# End-to-end evaluation (default: first model config)
+uv run python evaluation/evaluate_pipeline.py --dataset-size -1
+
+# Switch model by model_id
+uv run python evaluation/evaluate_pipeline.py --model-id gpt-oss-120b
+```
+### Conflict Detection Evaluation (Table 2)
 ```bash
 # Uses first model in evaluation/openai-apis/custom_models.json
 uv run python evaluation/evaluate_reasoning_agent.py
 
 # Use a specific configured model
 uv run python evaluation/evaluate_reasoning_agent.py --model-id deepseek-chat
-
-# Quick smoke test: evaluate only first 5 policies
-uv run python evaluation/evaluate_reasoning_agent.py --limit 5
-
-# Evaluate a slice: start from index 20, run next 10 policies
-uv run python evaluation/evaluate_reasoning_agent.py --start 20 --limit 10
 ```
 
-### Complete Pipeline Evaluation (Table 2)
-```bash
-# End-to-end evaluation (default: first model config, first 5 approved policies)
-uv run python evaluation/evaluate_pipeline.py
 
-# Quick smoke test on first 2 approved policies
-uv run python evaluation/evaluate_pipeline.py --dataset-size 2
-
-# Switch model by model_id
-uv run python evaluation/evaluate_pipeline.py --model-id gpt-oss-120b
-
-# Run full approved dataset
-uv run python evaluation/evaluate_pipeline.py --dataset-size -1
-
-# Other evaluators follow the same model selection behavior
-uv run python evaluation/evaluate_multi_models.py
-uv run python evaluation/evaluate_models.py
-```
 
 Results saved to: `evaluation/results/{model}_results.json`
 

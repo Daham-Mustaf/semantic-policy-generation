@@ -126,14 +126,17 @@ def evaluate_policy(reasoner: Reasoner, policy: dict) -> SimpleResult:
     try:
         # Call agent
         result = reasoner.reason(policy_text)
-        agent_decision = result.get("decision", "needs_input").lower()
+        raw_decision = str(result.get("decision", "needs_input")).lower()
+        # Force binary decision: only "approve" is kept; all others become "reject".
+        agent_decision = "approve" if raw_decision == "approve" else "reject"
         issues = result.get("issues", [])
-        predicted_conflicts = sorted({
-            c for c in (
-                normalize_conflict_type(issue.get("conflict_type") or issue.get("category"))
-                for issue in issues
-            ) if c
-        })
+        normalized_conflicts = [
+            normalize_conflict_type(issue.get("conflict_type") or issue.get("category"))
+            for issue in issues
+        ]
+        normalized_conflicts = [c for c in normalized_conflicts if c]
+        # Keep only the first predicted conflict type, preserving model output order.
+        predicted_conflicts = [normalized_conflicts[0]] if normalized_conflicts else []
 
         primary_conflict_match = None
         if expected_binary == "REJECTED" and expected_conflicts:
@@ -166,7 +169,8 @@ def evaluate_policy(reasoner: Reasoner, policy: dict) -> SimpleResult:
             policy_id=policy_id,
             expected=expected,
             expected_binary=expected_binary,
-            agent_decision="ERROR",
+            # Keep binary behavior on exceptions as well.
+            agent_decision="reject",
             correct=False,
             expected_conflicts=expected_conflicts,
             predicted_conflicts=[],

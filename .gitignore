@@ -108,3 +108,4 @@ Thumbs.db
 .DS_Store
 desktop.ini.env 
 evaluation/openai-apis/custom_models.json
+data/paper/
