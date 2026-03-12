@@ -41,7 +41,7 @@ class DetectedIssue(BaseModel):
 
 class ReasoningResult(BaseModel):
     """Complete reasoning output"""
-    decision: Literal["approve", "reject", "needs_input"]
+    decision: Literal["approve", "reject"]
     confidence: float = Field(ge=0.0, le=1.0)
     issues: list[DetectedIssue] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
@@ -312,10 +312,6 @@ Within each policy and across policies:
 9. Overly broad without specificity (Phase 1)
 10. Unenforceable without technical controls (Phase 4)
 
-### NEEDS_INPUT (confidence 0.5-0.7) if:
-- Vague terms exist but could be clarified with user input
-- Ambiguous terms need definition
-- Missing information prevents full analysis
 
 ### APPROVE (confidence 0.7-1.0) if:
 - No high-severity issues
@@ -610,9 +606,9 @@ class Reasoner:
                     logger.error(f"Failed to parse issue: {e}")
                     continue
             
-            decision = str(result.get("decision", "needs_input")).lower()
-            if decision not in {"approve", "reject", "needs_input"}:
-                decision = "needs_input"
+            decision = str(result.get("decision", "reject")).lower()
+            if decision not in {"approve", "reject"}:
+                decision = "reject"
 
             risk_level = str(result.get("risk_level", "medium")).lower()
             if risk_level not in {"critical", "high", "medium", "low"}:
@@ -634,7 +630,7 @@ class Reasoner:
             
             # Fallback response
             return {
-                "decision": "needs_input",
+                "decision": "reject",
                 "confidence": 0.5,
                 "risk_level": "high",
                 "reasoning": f"Failed to parse LLM response. Error: {str(e)}",
