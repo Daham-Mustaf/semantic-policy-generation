@@ -9,34 +9,33 @@ from typing import List, Dict, Any, Set
 from pydantic import BaseModel
 
 class ConflictType(str, Enum):
-    """Six primary conflict categories in natural language policies"""
-    
-    # Category 1: Vagueness & Scope
+    """Six conflict categories plus internal aliases"""
+
+    # PAPER CATEGORY 1: Vagueness (Policy level)
     VAGUE_BROAD = "vague_and_overly_broad"
     UNMEASURABLE = "unmeasurable_terms"
-    
-    # Category 2: Spatial
+
+    # PAPER CATEGORY 2: Spatial (Constraint level)
     SPATIAL_HIERARCHY = "spatial_hierarchy_conflict"
-    SPATIAL_OVERLAP = "spatial_overlap_conflict"
-    
-    # Category 3: Temporal
+    SPATIAL_OVERLAP = "spatial_overlap_conflict"       # internal alias → SPATIAL_HIERARCHY
+
+    # PAPER CATEGORY 3: Temporal (Constraint level)
     TEMPORAL_EXPIRED = "temporal_expired_policy"
     TEMPORAL_OVERLAP = "temporal_overlap_conflict"
-    TEMPORAL_IMPOSSIBLE = "temporal_impossible_sequence"
-    
-    
-    # Category 4: Action Semantics
+    TEMPORAL_IMPOSSIBLE = "temporal_impossible_sequence"  # internal alias → TEMPORAL_OVERLAP
+
+    # PAPER CATEGORY 4: Action Hierarchy (Rule level)
     ACTION_HIERARCHY = "action_hierarchy_conflict"
-    ACTION_SUBSUMPTION = "action_subsumption_conflict"
-    ACTION_CONFLICT = "action_conflict" 
-    
-    # Category 5: Dependencies
+    ACTION_SUBSUMPTION = "action_subsumption_conflict"  # internal alias → ACTION_HIERARCHY
+    ACTION_CONFLICT = "action_conflict"                 # internal alias → ACTION_HIERARCHY
+
+    # PAPER CATEGORY 5: Circular Dependency (Rule level)
     CIRCULAR_DEPENDENCY = "circular_approval_dependency"
-    WORKFLOW_CYCLE = "workflow_cycle_conflict"
-    
-    # Category 6: Roles & Context
+    WORKFLOW_CYCLE = "workflow_cycle_conflict"          # internal alias → CIRCULAR_DEPENDENCY
+
+    # PAPER CATEGORY 6: Role Conflict (Policy level)
     ROLE_HIERARCHY = "role_hierarchy_conflict"
-    PARTY_INCONSISTENCY = "party_specification_inconsistency"
+    PARTY_INCONSISTENCY = "party_specification_inconsistency"  # internal alias → ROLE_HIERARCHY
 
 class ConflictDetectionStrategy(BaseModel):
     """Defines how to detect a specific conflict type"""
