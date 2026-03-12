@@ -1,204 +1,259 @@
-# Intent-to-Policy: Ontology-Grounded Agentic AI for ODRL Generation
+# Intent-to-Policy
 
-Anonymous repository for the paper:  
+Code repository for the paper:
 **"Intent-to-Policy: An Ontology-Grounded Agentic AI System for Reliable ODRL Generation and Validation"**
 
----
+## What This Repository Provides
 
-## What This Does
+This repository implements a three-agent pipeline that converts natural language policy requirements into validated W3C ODRL 2.2 Turtle.
 
-Transforms natural language policy requirements into validated [ODRL 2.2](https://www.w3.org/TR/odrl-model/) Turtle via a three-stage multi-agent pipeline:
+Pipeline:
 
+```text
+Natural language policy
+  -> Reasoning Agent (conflict detection)
+  -> Generation Agent (ODRL Turtle drafting)
+  -> Validation Agent (SHACL + repair loop)
+  -> Final validated ODRL policy
 ```
-Natural Language → Reasoning Agent → Generation Agent → Validation Agent → Valid ODRL
+
+The design addresses three practical barriers in ODRL automation:
+- semantic conflicts in natural language requirements,
+- vocabulary/ontology hallucinations during generation,
+- structural and semantic compliance violations in produced policies.
+
+## Scientific Reproducibility Statement
+
+This README is organized to support artifact-style scientific reproducibility:
+- explicit environment and dependency requirements,
+- fixed evaluation entrypoints and command lines,
+- documented dataset locations and benchmark splits,
+- deterministic settings (temperature set to `0.0` in evaluation scripts),
+- saved machine-readable outputs in `evaluation/results/`.
+
+What this repository does **not** guarantee:
+- bitwise-identical outputs across different provider backends,
+- unchanged behavior when model versions or hosted endpoints change.
+
+## Method Overview
+
+Let `x` be a natural language policy input, `omega` semantic context, `s` SHACL shapes:
+
+```text
+f_reason   : (x, omega) -> (x', d, phi)
+f_generate : (x', omega) -> y'
+f_validate : (y', s) -> y
 ```
 
-Each agent is specialized and single-shot:
+Where:
+- `d` is a decision in `{approve, reject, needs_input}`,
+- `y'` is draft Turtle,
+- `y` is final validated Turtle after up to 3 repair attempts.
 
-| Agent | Input → Output | Role |
-|---|---|---|
-| **Reasoning** | `(x, ω) → (x', d, φ)` | Detects 6 conflict types before generation |
-| **Generation** | `(x', ω) → y'` | Produces W3C-compliant ODRL 2.2 Turtle |
-| **Validation** | `(y', s) → y` | Enforces SHACL shapes; targeted repair (max 3 attempts) |
+## Repository Layout
 
----
-
-## The Three Problems We Address
-
-1. **Latent semantic conflicts** — spatial hierarchies (Germany ⊂ EU), temporal overlaps, action subsumption (share ⊑ distribute), circular duty chains
-2. **LLM vocabulary hallucination** — non-existent ODRL terms like `odrl:readOnly`, mismatched operand-operator pairs
-3. **Structural non-compliance** — missing UIDs, invalid constraint triples, SHACL shape violations
-
----
-
-## Conflict Taxonomy (Reasoning Agent)
-
-The reasoning prompt performs phase-based analysis at three ODRL levels:
-
-| Level | Phase | Conflict Type | Formal Basis |
-|---|---|---|---|
-| Policy | 1 | Vagueness | `q_e = ⊤` (unbounded scope) |
-| Policy | 2 | Role hierarchy | `Manager ⊑ Administrator` |
-| Rule | 3 | Action hierarchy | `share ⊑ distribute` |
-| Rule | 4 | Circular dependency | `d1 → d2 → d1` |
-| Constraint | 5 | Temporal | Allen's 13 interval relations |
-| Constraint | 6 | Spatial | Geographic containment axioms |
-
----
-
-## Repository Structure
-
-```
+```text
+semantic-policy-generation/
 ├── agents/
 │   ├── reasoner/
-│   │   ├── reasoner_agent.py       # 6-phase conflict detection prompt + Reasoner class
-│   │   └── conflict_types.py       # ConflictType enum, detection strategies, examples
+│   │   ├── reasoner_agent.py
+│   │   └── conflict_types.py
 │   ├── generator/
-│   │   └── generator.py            # Ontology-grounded ODRL generation
+│   │   └── generator.py
 │   └── validator/
-│       ├── validator_agent.py      # SHACL validation + repair loop
-│       └── odrl_validation_tool.py # PySHACL + SPARQL compatibility checks
-│
+│       ├── validator_agent.py
+│       └── odrl_validation_tool.py
 ├── data/
-│   ├── conflicting_policies/       # 67 conflicting (6 categories)
-│   └── valid_policies/             # 83 valid (DRK, IDS, MDS sources)
-│
+│   ├── approved_policies/approved_policies_dataset.json
+│   ├── rejected_policies/rejected_policies_dataset.json
+│   └── text2policy/text2ttl_GT.jsonl
 ├── evaluation/
-│   ├── evaluate_reasoning.py       # Reproduces Table 2 (conflict detection)
-│   ├── evaluate_pipeline.py        # Reproduces Table 1 (full pipeline)
+│   ├── evaluate_reasoning_agent.py
+│   ├── evaluate_pipeline.py
+│   ├── evaluate_text2ttl_pipeline.py
+│   ├── model_config_loader.py
 │   └── openai-apis/
-│       └── example_models.json     # Model config template
-│
-├── config/                         # SHACL shapes
-├── .env.example
-└── pyproject.toml
+│       ├── example_models.json
+│       └── custom_models.json  # local, git-ignored
+└── README.md
 ```
 
----
+## Requirements
 
-## Installation
+- Linux/macOS (tested in Linux environments)
+- Python `>=3.13` (from `pyproject.toml`)
+- [`uv`](https://docs.astral.sh/uv/) for environment and dependency management
+- Access to either:
+  - Azure OpenAI deployment, or
+  - an OpenAI-compatible API endpoint
+
+## Setup
 
 ```bash
-# Requires Python 3.9+
+# 1) Install uv (if needed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-git clone https://github.com/anonymous/ODRL_Policy-Reasoning-Agents.git
-cd ODRL_Policy-Reasoning-Agents
+# 2) Clone and enter repo
+git clone https://github.com/Daham-Mustaf/semantic-policy-generation.git
+cd semantic-policy-generation
 
+# 3) Install project dependencies
 uv sync
-cp .env.example .env        # Add your API credentials
 ```
 
----
+## Model Configuration
 
-## Usage
+All evaluation scripts load model endpoints from:
+`evaluation/openai-apis/custom_models.json`
 
-### Minimal Example
+Create it from template:
+
+```bash
+cp evaluation/openai-apis/example_models.json evaluation/openai-apis/custom_models.json
+```
+
+Then edit each model entry (`base_url`, `model_id`, `api_key`) with your actual credentials/endpoints.
+
+Behavior:
+- If `--model-id` is omitted, the **first** entry in `custom_models.json` is used.
+- If `--model-id` is provided, it must match an existing `model_id` entry.
+
+## Quick API Usage
 
 ```python
 from agents.reasoner.reasoner_agent import Reasoner
 from agents.generator.generator import Generator
 from agents.validator.validator_agent import ValidatorAgent
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
+cfg = {
+    "api_key": "YOUR_API_KEY",
+    "base_url": "https://your-openai-compatible-endpoint/v1",
+    "model": "your-model-id",
+}
 
-creds = dict(
-    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+reasoner = Reasoner(**cfg, temperature=0.0)
+generator = Generator(**cfg, temperature=0.0)
+validator = ValidatorAgent(**cfg, temperature=0.0)
+
+policy_text = "UC4 partners may use dataset A for research until 2025-12-31."
+
+reason = reasoner.reason(policy_text)
+if reason["decision"] not in {"approve", "needs_input"}:
+    raise ValueError(f"Rejected by reasoner: {reason['issues']}")
+
+draft = generator.generate(policy_text, policy_id="example_001")
+final = validator.validate_and_regenerate(
+    policy_text=policy_text,
+    odrl_turtle=draft["odrl_turtle"],
+    max_attempts=3,
 )
 
-reasoner  = Reasoner(**creds)
-generator = Generator(**creds)
-validator = ValidatorAgent(**creds)
-
-policy_text = """
-UC4 partners may read and use the medieval manuscript collection
-for educational and research purposes until December 31, 2025.
-"""
-
-# Stage 1: conflict detection
-result = reasoner.reason(policy_text)
-if result["decision"] == "reject":
-    print("Rejected:", result["issues"])
-else:
-    # Stage 2: generation
-    odrl = generator.generate(policy_text)
-    # Stage 3: validation + repair
-    final = validator.validate_and_regenerate(
-        policy_text=policy_text,
-        odrl_turtle=odrl["odrl_turtle"],
-        max_attempts=3,
-    )
-    print("Valid" if final["success"] else "Failed")
-    print(final["final_odrl"])
+print(final["success"])
+print(final["final_odrl"])
 ```
 
-### Model Configuration
+## Reproducing Core Paper Experiments
 
-Copy the template and add your endpoints:
-
-```bash
-cp evaluation/openai-apis/example_models.json \
-   evaluation/openai-apis/custom_models.json
-```
-
-`custom_models.json` is gitignored. The first entry is used by default; override with `--model-id`.
-
----
-
-## Reproducing Paper Results
+### 1) Reasoning Agent Evaluation (150 policies)
 
 ```bash
-# Table 1 — full pipeline (150 policies, default model)
-uv run python evaluation/evaluate_pipeline.py --dataset-size -1
-
-# Table 1 — specific model
-uv run python evaluation/evaluate_pipeline.py --model-id gpt-oss-120b
-
-# Table 2 — conflict detection only
+# Evaluate all approved+rejected policies
 uv run python evaluation/evaluate_reasoning_agent.py
 
-# Table 2 — specific model
+# Optional: evaluate specific model config entry
 uv run python evaluation/evaluate_reasoning_agent.py --model-id deepseek-chat
 ```
 
-Results written to `evaluation/results/{model}_results.json`.
+Optional slicing:
 
----
+```bash
+uv run python evaluation/evaluate_reasoning_agent.py --start 0 --limit 50
+```
 
-## Dataset
+### 2) End-to-End Pipeline on Approved Policies
 
-150 ODRL policy descriptions with ground-truth labels:
+```bash
+# Full approved split
+uv run python evaluation/evaluate_pipeline.py --dataset-size -1
 
-**Conflicting (67):**
+# Example: switch model by model_id
+uv run python evaluation/evaluate_pipeline.py --model-id gpt-oss-120b --dataset-size -1
+```
 
-| Category | n |
-|---|---|
-| Vagueness | 17 |
-| Temporal | 21 |
-| Action Hierarchy | 13 |
-| Role Hierarchy | 7 |
-| Circular Dependency | 6 |
-| Spatial | 3 |
----
+### 3) Input-to-Policy Pipeline (`text2ttl_GT.jsonl`)
 
-**Key finding:** Conflict detection accuracy, not structural compliance, is the primary bottleneck. Structural violations are reliably recovered by SHACL-guided repair; missed conflict decisions are not.
+```bash
+uv run python evaluation/evaluate_text2ttl_pipeline.py --dataset-size -1
 
-See paper Section 5 for full metrics.
+# Optionally enforce reasoner gating
+uv run python evaluation/evaluate_text2ttl_pipeline.py --dataset-size -1 --respect-reasoner-gate
+```
 
----
+## Output Artifacts
 
-## Dependencies
+All evaluation outputs are written to `evaluation/results/` as JSON.
 
-Managed via `uv` / `pyproject.toml`: `langchain`, `langchain-openai`, `pyshacl`, `rdflib`, `pydantic`.
+Typical files include:
+- reasoning outputs: `agent_results.json`
+- pipeline metrics/details: `*_pipeline_metrics.json`, `*_pipeline_results.json`
+- text2ttl metrics/details: `*_text2ttl_pipeline_metrics.json`, `*_text2ttl_pipeline_details.json`
 
----
+These files are the primary artifact interface for downstream analysis and table generation.
+
+## Datasets and Benchmarks
+
+### Benchmark A (Reasoning + Pipeline)
+- `data/rejected_policies/rejected_policies_dataset.json`
+- `data/approved_policies/approved_policies_dataset.json`
+- Total: 150 policies (67 rejected / 83 approved)
+
+Conflict-type distribution in rejected split:
+- vagueness: 17
+- temporal: 21
+- spatial: 3
+- action hierarchy: 13
+- role hierarchy: 7
+- circular dependency: 6
+
+### Benchmark B (Input-to-Policy)
+- `data/text2policy/text2ttl_GT.jsonl`
+- 50 samples (used for end-to-end structured extraction/pipeline evaluation)
+
+## Alignment with Paper Claims
+
+As reported in the manuscript:
+- conflict detection quality is the primary bottleneck,
+- generation is generally high-success on reasoner-approved inputs,
+- SHACL-guided regeneration improves first-pass validity to high final validity.
+
+Use the commands above to regenerate corresponding stage-level metrics.
+
+## Limitations
+
+- Conflict detection still depends on LLM reasoning quality.
+- Spatial reasoning may rely on implicit world knowledge unless explicitly grounded.
+- Metrics can vary with endpoint/model updates even under fixed prompts.
+- Current benchmark setup focuses on single-policy inputs (cross-policy reasoning is future work).
+
+## Responsible Use
+
+- Do not use generated policies without domain/legal review in production enforcement systems.
+- Treat outputs as decision support artifacts, not legal guarantees.
+- Keep API keys out of version control (`custom_models.json` is local by design).
+
+## Submission Metadata (To Be Completed)
+
+Fill these fields when preparing the final submission package:
+
+- **Authors:** `[Author 1]`, `[Author 2]`, `[Author 3]`
+- **Affiliations:** `[Institution / Lab]`
+- **Contact Email:** `[corresponding-author@email]`
+- **Paper Venue/Track:** `[Conference Name, Track]`
+- **Paper Identifier:** `[Submission ID / DOI when available]`
+- **Project Homepage:** `[URL to be added]`
+- **Endpoint Freeze Date:** `[YYYY-MM-DD]`
+- **Artifact Version Tag:** `[git tag or release]`
 
 ## License
 
-MIT
-
----
+MIT License.
