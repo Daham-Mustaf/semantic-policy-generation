@@ -109,3 +109,13 @@ Thumbs.db
 desktop.ini.env 
 evaluation/openai-apis/custom_models.json
 data/paper/
+agents/reasoner/reasoner_agent_old_old.py
+agents/reasoner/reasoner_agent_old.py
+evaluation/demo_parallel_reasoner_eval.py
+evaluation/diagnose_failed_models.py
+evaluation/smoke_test_reasoner_models.py
+evaluation/run_parallel_demo_nohup.sh
+evaluation/demo_runs/
+evaluation/continue_reasoner_eval_remaining.py
+evaluation/run_parallel_full_eval_gpt_oss_120b.sh
+evaluation/summarize_reasoner_results.py

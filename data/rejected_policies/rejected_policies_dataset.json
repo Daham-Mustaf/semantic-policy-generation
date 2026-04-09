@@ -1262,7 +1262,7 @@
       }
     },
     {
-      "policy_id": "unknown",
+      "policy_id": "synthetic_unknown_temporal_use_window_vs_duty_date",
       "policy_text": "Permission to odrl:use is granted only between 2025-01-01 and 2025-06-30. However, a duty requires that the asset must be used exactly on 2024-12-15.",
       "source": "synthetic",
       "category": "unknown",
@@ -1281,7 +1281,7 @@
       }
     },
     {
-      "policy_id": "unknown",
+      "policy_id": "synthetic_unknown_storage_high_permission_prohibition",
       "policy_text": "Permission allows the asset to be stored only if the storage location has securityLevel = 'HIGH'. A prohibition states that the asset must not be stored in any location with securityLevel = 'HIGH'.",
       "source": "synthetic",
       "category": "unknown",

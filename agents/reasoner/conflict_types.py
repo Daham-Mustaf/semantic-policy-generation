@@ -24,6 +24,10 @@ class ConflictType(str, Enum):
     TEMPORAL_OVERLAP = "temporal_overlap_conflict"
     TEMPORAL_IMPOSSIBLE = "temporal_impossible_sequence"  # internal alias → TEMPORAL_OVERLAP
 
+    # Constraint / taxonomy (prompt enum)
+    NUMERIC_CONSTRAINT_UNSAT = "numeric_constraint_unsat"
+    CONCEPT_TAXONOMY = "concept_taxonomy_conflict"
+
     # PAPER CATEGORY 4: Action Hierarchy (Rule level)
     ACTION_HIERARCHY = "action_hierarchy_conflict"
     ACTION_SUBSUMPTION = "action_subsumption_conflict"  # internal alias → ACTION_HIERARCHY

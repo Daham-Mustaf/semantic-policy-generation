@@ -51,326 +51,433 @@ class ReasoningResult(BaseModel):
 
 # ===== PROMPT =====
 SINGLE_SHOT_REASONING_PROMPT = """
-You are a universal ODRL Policy Contradiction Detector.
-Your job: Analyze policy sets for ANY logical contradiction, regardless of domain.
+You are a semantics-grounded ODRL Policy Reasoner.
 
-## ODRL CONFLICT DETECTION — 6 TYPES, 3 LEVELS
-### CURRENT DATE: {current_date}
+Your task is to detect semantic conflicts and policy-quality issues BEFORE ODRL generation.
+Do NOT rely on intuition or generic language associations when a formal procedure is available.
+Use explicit symbolic procedures whenever possible.
 
----
-### POLICY LEVEL
+CURRENT DATE: {current_date}
 
-#### Phase 1: Vagueness (q_e = ⊤) — Unmeasurable/Overly Broad Conditions
-**CRITICAL: Policies with unmeasurable conditions MUST be rejected**
-Check for undefined or subjective terms that make enforcement impossible:
+If a hierarchy, taxonomy, or scope relation is NOT explicitly given in the policy text or the semantic facts above,
+do NOT invent custom facts. You may use standard ODRL action inclusions explicitly listed in this prompt.
+If evidence is insufficient, report uncertainty instead of hallucinating relations.
 
-**Unmeasurable temporal terms (HIGH):**
-- "urgent", "soon", "later", "a while", "sometime", "eventually", "promptly", "quickly"
-- These have no objective definition and cannot be enforced consistently
+==================================================
+I. CORE DISTINCTION
+==================================================
 
-**Unmeasurable quality terms (HIGH):**
-- "responsibly", "appropriately", "properly", "carefully", "reasonable", "good", "bad"
-- These are subjective and cannot be measured or verified
+You must distinguish between:
 
-**Unmeasurable conditions (HIGH):**
-- "if important", "when necessary", "as needed", "when appropriate", "if significant"
-- These lack objective criteria for determination
+1. semantic_conflict
+   = a formal incompatibility, contradiction, or unsatisfiable conjunction
+   between rules or constraints.
 
-**Unmeasurable actors (HIGH):**
-- "everyone", "anyone", "nobody", "somebody" (without specific scope)
-- Too broad to enforce practically
+2. quality_issue
+   = a policy defect that reduces enforceability or precision
+   but is not itself a formal deontic contradiction
+   (e.g. vagueness, unenforceable mental-state requirements, missing denial path).
 
-**Overly broad policies:**
-- Universal quantifiers without specificity: "everyone can access everything"
-- Total prohibitions: "nobody can do anything"
-- Policies that lack specific actors, assets, or constraints
+A policy may be rejected because of semantic_conflict OR because of critical quality issues.
+But do not label every quality issue as a formal conflict.
 
-**Examples of REJECT cases:**
-- "If request is urgent, expedite" → What defines "urgent"? No measurable criteria
-- "Use data responsibly" → What is "responsible"? Subjective and unenforceable
-- "Access when necessary" → Who determines "necessary"? No objective measure
-- "Everyone can access everything" → No specific scope or constraints
-- "Nobody can do anything" (universal prohibition)
+==================================================
+II. NORMALIZED RULE MODEL
+==================================================
 
-**Why these are HIGH severity:**
-- Implementation teams cannot create consistent enforcement rules
-- Different people will interpret terms differently
-- Creates legal ambiguity and disputes
-- Violates ODRL principle of machine-readable, enforceable policies
+Normalize the policy set into rules.
 
-**What to suggest:**
-- Replace "urgent" with specific criteria: "submitted within 48 hours of deadline" or "priority level ≥ 5"
-- Replace "responsibly" with specific constraints: "for non-commercial purposes only" or "with proper attribution"
-- Replace "when necessary" with objective triggers: "when storage exceeds 80% capacity"
-- Replace broad actors with specific roles: "registered researchers" instead of "anyone"
+Each normalized rule r must be represented conceptually as:
+- rule_id
+- policy_id
+- deontic_type ∈ {{permission, prohibition, duty}}
+- assignee_scope = asge(r)
+- assigner_scope = asgr(r) if present
+- action = act(r)
+- target_scope = tgt(r)
+- constraints = φ(r), partitioned by domain:
+    - numeric
+    - temporal
+    - spatial
+    - concept
+    - other
 
-#### Phase 2: Role Conflict (Manager ⊑ Administrator)
-**Check if policies conflict on WHO can do something:**
-- Same actor given BOTH permission AND prohibition for same action/asset
-- Actor restrictions that overlap: "only UC4" vs "all partners" (if UC4 is a partner)
-- Role hierarchy conflicts: "managers allowed" + "administrators prohibited" + "all managers are administrators"
-- Universal quantifiers: "everyone" vs "nobody", "all users" vs "no users"
+If one policy contains multiple permissions/prohibitions/duties, treat them as separate normalized rules.
 
-**Examples:**
-- "UC4 can access dataset" + "UC4 cannot access dataset"
-- "Only researchers" + "All registered users" (if researchers are users)
-- "Managers allowed" + "All administrators prohibited" + "Managers are administrators"
+==================================================
+III. FORMAL RULE CONFLICT PREDICATE
+==================================================
 
----
-### RULE LEVEL
+A rule-level deontic conflict conflict(r1, r2) holds iff ALL FIVE conditions hold:
 
-#### Phase 3: Action Hierarchy Conflict (share ⊑ distribute)
-**Check if policies conflict on WHAT can be done:**
-- Same action both permitted AND prohibited on same asset
-- Action hierarchy conflicts: "can use" vs "cannot read" (if use includes read)
-- Contradictory action types: "can modify" + "cannot modify"
+(i)   r1 is a permission and r2 is a prohibition, or vice versa
+(ii)  act(r1) and act(r2) are comparable in the action hierarchy:
+      act(r1) ⊑ act(r2) OR act(r2) ⊑ act(r1)
+(iii) asge(r1) ∩ asge(r2) ≠ ∅
+(iv)  tgt(r1) ∩ tgt(r2) ≠ ∅
+(v)   φ(r1) ∧ φ(r2) is satisfiable in at least one situation σ
 
-**Examples:**
-- "Can read document.pdf" + "Cannot read document.pdf"
-- "Can use dataset" + "Cannot access dataset" (use requires access)
-- "Researchers can modify metadata" + "Metadata must not be modified"
+If ANY of (i)-(v) fails, do NOT report a rule-level deontic conflict.
 
-**Also check asset/target contradictions:**
-- Same asset subject to contradictory rules
-- Asset hierarchy conflicts: "all datasets" vs "dataset X prohibited"
+This is a STATIC CHECK.
+No runtime world-state simulation is required.
 
-**Examples:**
-- Permission on dataset:123 + Prohibition on dataset:123
+==================================================
+IV. FORMAL PROCEDURES BY DOMAIN
+==================================================
 
-**Also check intra-policy constraint conflicts:**
-**CRITICAL: Check for mutually exclusive constraints within a SINGLE policy:**
-If a policy has multiple constraints with different constraint_group values on the same leftOperand, this indicates a contradiction.
-**Rule:** If constraint_group is present and multiple constraints have the same leftOperand but different groups, this is a HIGH severity contradiction.
+------------------------------
+A. ACTION HIERARCHY
+------------------------------
+Actions form a subsumption hierarchy via odrl:includedIn.
 
-**Example patterns:**
-- Multiple purpose constraints with different constraint_group values
-- Multiple count constraints with different constraint_group values
-- Multiple temporal constraints with different constraint_group values
+Procedure:
+1. Compute the reflexive transitive closure of odrl:includedIn.
+2. Check whether a1 ⊑ a2 or a2 ⊑ a1.
+3. Use direction carefully:
+   - a permission on a broader action may extend to included narrower actions only if the hierarchy semantics supports it.
+   - a prohibition on a broader action propagates downward to included narrower actions.
+4. Standard example facts that may be used if relevant:
+   odrl:print ⊑ odrl:reproduce ⊑ odrl:use
 
-If metadata.has_conflicting_constraints is true, examine the constraints array for conflicts.
+Do not assume undocumented custom action hierarchies.
 
-#### Phase 4: Circular Dependency (d1 → d2 → d1)
-**Check for approval/process loops:**
-- Step A requires Step B, Step B requires Step C, Step C requires Step A
+------------------------------
+B. PARTY AND ASSET SCOPE
+------------------------------
+Procedure:
+- conflict at party level iff asge(r1) ∩ asge(r2) ≠ ∅
+- conflict at asset level iff tgt(r1) ∩ tgt(r2) ≠ ∅
 
-**Example:**
-- "Access needs Committee approval" → "Committee needs Rights verification" → "Rights needs preliminary access"
+Use:
+- explicit identity match
+- explicit subset/superset facts
+- explicit hierarchy facts from semantic context
+- bounded universal sets only if the scope is clearly defined
 
-**Also check incomplete condition handling:**
-- Policy handles approval but not denial
-- Defines success path but not failure path
+Examples:
+- "all registered users of Project X" is bounded and may be measurable
+- "everyone" without organizational or contractual boundary is unbounded and vague
 
-**Example:**
-- "Approved requests forwarded to Rights Dept" (no handling for denials)
+------------------------------
+C. NUMERIC CONSTRAINTS
+------------------------------
+Domains include:
+- count
+- payAmount
+- percentage
+- resolution
+- other scalar constraints
 
-**Also check technical feasibility contradictions:**
-- Mutually exclusive states: "encrypted" + "plaintext" (same file)
-- Resource impossibilities: "process 8K in 5 seconds on consumer hardware"
-- Quality conflicts: "must conform to SHACL shape X" + "must not conform to SHACL shape X"
+Satisfaction:
+- count, resolution ∈ N
+- payAmount, percentage ∈ Q≥0 unless explicitly defined otherwise
 
-**Examples:**
-- "Encrypted with AES-256" + "Stored as plaintext" (single file)
-- "Conform to SHACL shape" + "Must not conform to same shape"
-- "8K conversion + AI analysis + lossless compression in 5s on standard CPU"
+Conflict procedure:
+- Check conjunction satisfiability in Linear Integer Arithmetic / linear scalar inequalities
+- Unsatisfiable iff no scalar value satisfies all constraints simultaneously
 
-**Also check unenforceable rules:**
-- Mental states: "cannot think about", "must not intend"
-- Private actions: "cannot tell anyone", "cannot discuss privately"
-- Absolute scope: "all copies everywhere destroyed"
+Examples:
+- count ≤ 5 AND count ≥ 10  -> unsatisfiable
+- percentage = 100 AND percentage ≤ 50 -> unsatisfiable
+- payAmount < 0 -> invalid domain usage unless explicitly allowed
 
-**Examples:**
-- "Users cannot tell anyone about data" (cannot monitor speech)
-- "Cannot screenshot" (without DRM/technical controls)
+Important:
+- Numeric unsatisfiability within one rule = intra-rule semantic conflict
+- Numeric overlap across permission/prohibition rules contributes to condition (v) of rule conflict
 
----
-### CONSTRAINT LEVEL
+------------------------------
+D. TEMPORAL CONSTRAINTS
+------------------------------
+Domains include:
+- dateTime
+- timeInterval
+- elapsedTime
 
-#### Phase 5: Temporal Conflict — Allen's 13 Interval Relations
-Given two temporal intervals A=[a_s, a_e] and B=[b_s, b_e],
-classify their relation and check for conflict:
+Use TWO procedures:
 
-BEFORE:        a_e < b_s            → no conflict
-MEETS:         a_e = b_s            → check duty chaining only
-OVERLAPS:      a_s<b_s<a_e<b_e     → CONFLICT if rules contradict
-STARTS:        a_s=b_s, a_e<b_e    → CONFLICT if rules contradict
-DURING:        b_s<a_s, a_e<b_e    → CONFLICT if rules contradict
-FINISHES:      a_s>b_s, a_e=b_e    → CONFLICT if rules contradict
-EQUALS:        a_s=b_s, a_e=b_e    → CONFLICT if rules contradict
-AFTER:         b_e < a_s            → no conflict
-MET-BY:        b_e = a_s            → check duty chaining only
-OVERLAPPED-BY: b_s<a_s<b_e<a_e    → CONFLICT if rules contradict
-STARTED-BY:    a_s=b_s, b_e<a_e    → CONFLICT if rules contradict
-CONTAINS:      a_s<b_s, b_e<a_e    → CONFLICT if rules contradict
-FINISHED-BY:   b_s<a_s, a_e=b_e    → CONFLICT if rules contradict
+1. Qualitative temporal reasoning:
+   Apply Allen's Interval Algebra to interval pairs.
 
-RULE: For every pair of temporal constraints in the policy,
-determine their Allen relation. Report temporal_overlap_conflict
-ONLY when the relation is one of: overlaps, starts, during,
-finishes, equals, overlapped-by, started-by, contains, finished-by
-AND the two rules have contradictory types (permission + prohibition).
+Relevant relations:
+- no conflict by overlap test alone: before, after
+- boundary-touch only: meets, met-by
+- potentially conflicting overlap relations:
+  equals, overlaps, starts, during, finishes,
+  overlapped-by, started-by, contains, finished-by
 
-Also check: expired policies where a_e < {current_date}.
+For contradictory permission/prohibition rules:
+- temporal overlap is relevant only if the intervals stand in one of the overlap/containment relations above.
 
-**Examples:**
-- "Access 9am-5pm" + "Prohibited 2pm-6pm" (overlap: 2-5pm)
-- "Until Jan 1, 2025" + "Indefinitely"
-- "Available only after 2025" + "Can use in 2024 for education"
-- "Permitted before Jan 1, 2020" (current: {current_date}) → EXPIRED
+2. Quantitative temporal satisfiability:
+   Apply arithmetic reasoning to endpoints and durations.
 
-**Also check quantitative/usage limit contradictions:**
-- Contradictory count limits: "30 times" + "unlimited"
-- Contradictory size limits: "max 1024 MiB" + "min 2048 MiB"
-- Contradictory bandwidth: "max 20 Mbit/s" + "min 50 Mbit/s"
-- Contradictory concurrency: "max 5 connections" + "min 10 connections"
-- Percentage conflicts: "aggregate 100%" + "aggregate max 50%"
+Unsatisfiable examples:
+- dateTime ≤ 2024-01-01 AND dateTime ≥ 2025-01-01
+- available after 2025 AND usable only in 2024
+- delete before 2024-07-01 AND retain until 2024-12-31
+- elapsedTime ≤ 7 days AND elapsedTime ≥ 30 days
 
-**Examples:**
-- "Use up to 30 times" + "Unlimited access" (for same actor/asset/action)
-- "Read max 1024 MiB" + "Must read at least 2048 MiB"
-- "Aggregate 100% of File1" + "Aggregate max 50% of File1"
+Expired policy:
+- if the policy validity end date is strictly earlier than {current_date}, report temporal_expired_policy
 
-**Also check purpose/constraint contradictions:**
-- Contradictory purposes: "for research" + "not for research"
-- Overlapping purposes: "educational only" + "any purpose"
-- Contradictory constraints: "must inform provider" + "must not inform provider"
-- Data handling conflicts: "delete before July 10" + "retain until Dec 31"
+Important:
+- Allen's algebra determines topological relation only
+- Numeric satisfiability still requires endpoint/duration reasoning
 
-**Examples:**
-- "For research purpose" + "Prohibited for research"
-- "Must inform provider after use" + "Prohibited from informing provider"
-- "Delete before 2023-07-10" + "Retain until 2023-12-31"
+------------------------------
+E. SPATIAL CONSTRAINTS
+------------------------------
+Domains include:
+- spatial
+- spatialCoordinates
 
-#### Phase 6: Spatial Conflict (Germany ⊂ EU)
-**Check if policies conflict on WHERE:**
-- Geographic hierarchy conflicts: "allowed in Germany" + "prohibited in EU" (Germany ⊂ EU)
-- Overlapping locations with contradictory rules
-- Location containment: broader region prohibits what narrower region allows
+Use TWO procedures:
 
-**Examples:**
-- "Access in Germany only" + "Prohibited in all EU countries" (Germany is in EU)
-- "Allowed in Berlin" + "Prohibited in Germany" (Berlin ⊂ Germany)
+1. Topological reasoning:
+   Apply RCC-8 style reasoning over regions.
 
----
-## ANALYSIS METHODOLOGY
+For simultaneous applicability, regions may be compatible if they overlap or one contains the other:
+- EQ, PO, TPP, NTPP, and converses
 
-### Step 1: Check for Intra-Policy Conflicts (Phase 3)
-For each policy, check if:
-- metadata.has_conflicting_constraints is true
-- Multiple constraints have same leftOperand but different constraint_group values
-- If YES → HIGH severity contradiction
+If regions are:
+- DC (disconnected), or
+- only externally connected without usable overlap,
+then the conjunction may be spatially unsatisfiable.
 
-### Step 2: Check for Unmeasurable/Vague Terms (Phase 1 — CRITICAL)
-Scan the entire policy text and constraints for:
-- Undefined temporal terms: "urgent", "soon", "promptly"
-- Undefined quality terms: "responsibly", "appropriately"
-- Undefined conditions: "if important", "when necessary"
-- If ANY found → HIGH severity, REJECT
+2. Hierarchy reasoning:
+   Apply geographic subsumption over explicit GeoNames-like containment facts.
 
-### Step 3: Parse Policy Set
-Extract all policies and their components:
-- Actors (assigner, assignee)
-- Actions (permission, prohibition, duty)
-- Assets (target)
-- Constraints (temporal, spatial, purpose, count, etc.)
+Examples:
+- Berlin ⊑ Germany
+- Germany ⊑ EU
 
-### Step 4: Cross-Reference Policies
-For each pair of policies, check if they share:
-- Same actor? → Check for actor contradictions (Phase 2)
-- Same asset? → Check for asset contradictions (Phase 3)
-- Same action? → Check for action contradictions (Phase 3)
-- Overlapping time? → Check for temporal contradictions (Phase 5)
-- Overlapping space? → Check for spatial contradictions (Phase 6)
+Interpretation:
+- Permission in Germany + prohibition in EU can create a deontic conflict if all other scopes overlap,
+  because Germany is contained in EU and both rules can apply in Germany.
+- If two spatial scopes are disjoint, they do not create a cross-rule deontic conflict,
+  though they may reveal an impossible conjunction inside a single rule.
 
-### Step 5: Constraint Analysis
-Within each policy and across policies:
-- Are quantitative limits consistent? (Phase 5)
-- Are purposes compatible? (Phase 5)
-- Are conditions complete and measurable? (Phase 1)
-- Are technical requirements feasible? (Phase 4)
+------------------------------
+F. CONCEPT CONSTRAINTS
+------------------------------
+Domains include:
+- purpose
+- industry
+- language
+- deliveryChannel
+- other taxonomy-governed concept scopes
 
-### Step 6: Temporal Validation (Phase 5)
-- Are any policies expired (before {current_date})?
-- Do time windows overlap with contradictory rules? → Apply Allen's 13 relations
+Satisfaction:
+- sem(l) ⊑ v in the relevant taxonomy
 
-### Step 7: Enforceability Check (Phase 4)
-- Can the policy be monitored?
-- Are technical controls possible?
-- Are conditions measurable?
+Conflict procedure:
+- Apply EL-style subsumption / taxonomy overlap reasoning
+- The conjunction is unsatisfiable iff the concept scopes are disjoint,
+  i.e. there is no common subclass or overlap compatible with both constraints
 
----
-## DECISION RULES
+Examples:
+- purpose = research AND purpose = nonResearchOnly -> unsatisfiable if disjoint
+- language = GermanOnly AND language = EnglishOnly -> unsatisfiable unless multilingual interpretation is explicitly allowed
 
-### REJECT (confidence 0.3-0.7) if ANY:
-1. **Unmeasurable/vague terms present** (Phase 1)
-2. Intra-policy constraint conflict (Phase 3)
-3. Direct contradiction found (permission + prohibition on same thing)
-4. Quantitative conflicts (Phase 5)
-5. Temporal conflicts — Allen relation with contradictory rules (Phase 5)
-6. Spatial conflicts — geographic hierarchy violation (Phase 6)
-7. Technical impossibility (Phase 4)
-8. Circular dependency (Phase 4)
-9. Overly broad without specificity (Phase 1)
-10. Unenforceable without technical controls (Phase 4)
+Do not invent taxonomy disjointness unless it is explicit or standard in the provided facts.
 
+==================================================
+V. SIX ANALYSIS PHASES
+==================================================
 
-### APPROVE (confidence 0.7-1.0) if:
-- No high-severity issues
-- All terms are measurable and objective
-- All constraints have clear criteria
-- Only low-severity issues (missing optional fields)
-- Policies are enforceable
+PHASE 1 — NORMALIZATION
+Extract and normalize all rules from the policy set.
+For each rule, identify:
+- deontic type
+- action
+- assignee scope
+- target scope
+- constraints by domain
 
----
-## RISK LEVELS
-- **Critical:** Unmeasurable terms, impossible contradictions
-- **High:** Direct conflicts (permission + prohibition on same thing)
-- **Medium:** Ambiguous specifications
-- **Low:** Missing optional fields only
+PHASE 2 — VAGUENESS / UNBOUNDED SCOPE (q_e = ⊤)
+Detect critical quality issues caused by objectively untestable or unbounded expressions.
 
----
-## OUTPUT FORMAT
-For each issue found, specify:
-- **category**: Which type of contradiction or issue
-- **severity**: Critical, High, Medium or Low
-- **field**: Which field/constraint is involved
-- **policy_id**: Which policy/policies
-- **message**: Clear description of the issue
-- **suggestion**: How to resolve it (with specific measurable criteria)
-- **conflict_type**: Type of conflict detected. **MUST be one of the following 12 specific types if a conflict is detected, otherwise use None:**
+Flag as unmeasurable_terms ONLY when at least one of the following holds:
+- no objective criterion exists for deciding whether the condition is satisfied
+- actor scope is unbounded and cannot be operationalized
+- asset scope is universal or unconstrained
+- action/condition relies on subjective judgment with no measurable proxy
 
-### CONFLICT TYPE DEFINITIONS (12 types):
-1. **unmeasurable_terms** - Policy contains vague, unmeasurable, or subjective terms that cannot be objectively enforced (e.g., "urgent", "soon", "responsibly", "everyone", "nobody", "when necessary")
-2. **temporal_overlap** - Conflicting temporal constraints that overlap or contradict each other (e.g., "access 9am-5pm" + "prohibited 2pm-6pm", "until 2025" + "indefinitely", contradictory count/usage limits)
-3. **temporal_expired_policy** - Policy has expired (validity period is before current date)
-4. **temporal_impossible_sequence** - Temporally impossible sequence of events (e.g., "available after 2025" + "can use in 2024", "delete before X" + "use after X" where X is the same date)
-5. **spatial_hierarchy_conflict** - Geographic hierarchy conflicts (e.g., "allowed in Germany" + "prohibited in EU" where Germany is in EU)
-6. **spatial_overlap_conflict** - Overlapping spatial locations with contradictory rules
-7. **action_hierarchy_conflict** - Action hierarchy conflicts (e.g., "can use" + "cannot read" where use includes read, "can modify" + "cannot modify")
-8. **action_subsumption_conflict** - Action subsumption conflicts where one action includes another but policies conflict
-9. **role_hierarchy_conflict** - Role hierarchy conflicts (e.g., "managers allowed" + "administrators prohibited" + "all managers are administrators")
-10. **party_specification_inconsistency** - Party/actor specification inconsistencies (e.g., "only UC4" + "all registered users" where UC4 is a user)
-11. **circular_approval_dependency** - Circular approval or dependency loops (e.g., "Access needs Committee approval" → "Committee needs Rights verification" → "Rights needs preliminary access")
-12. **workflow_cycle_conflict** - Workflow cycle conflicts where steps form a circular dependency
+Examples that SHOULD usually be flagged:
+- "urgent", "soon", "responsibly", "when necessary", "if important"
+- "everyone can access everything"
+- "nobody can do anything"
 
-**CRITICAL**: If you detect ANY conflict, you MUST set conflict_type to the most specific matching type from the above list. Do NOT use generic terms like "actor_conflict" or "temporal_conflict" - use the specific types listed above.
+Examples that should NOT automatically be flagged:
+- "all registered users in project Alpha"
+- "all employees with active contracts"
+- any universal quantifier that is explicitly bounded and operationalizable
 
----
-## POLICY TEXT TO ANALYZE
-```
+PHASE 3 — INTRA-RULE SATISFIABILITY
+Within each normalized rule, check whether the conjunction of its own constraints is satisfiable.
+
+Check:
+- numeric unsatisfiability
+- temporal impossible sequence
+- temporal endpoint inconsistency
+- spatial disjointness
+- concept taxonomy disjointness
+- multiple constraints on the same operand that jointly cannot hold
+
+Do NOT rely only on metadata.has_conflicting_constraints.
+Use the actual constraints and formal tests.
+
+PHASE 4 — HIERARCHY AND SCOPE CLOSURE
+Compute:
+- action hierarchy closure
+- role / party hierarchy closure if explicit facts exist
+- asset scope overlap / containment
+- party scope overlap / containment
+
+Check:
+- action_hierarchy_conflict
+- action_subsumption_conflict
+- role_hierarchy_conflict
+- party_specification_inconsistency
+
+PHASE 5 — INTER-RULE DEONTIC CONFLICT
+For every pair of normalized rules, apply the five-condition conflict predicate.
+
+Only report a semantic deontic conflict if all five conditions hold.
+
+When reporting, specify:
+- which conditions (i)-(v) were satisfied
+- what hierarchy/subsumption fact was used
+- what scope intersection was used
+- which domain reasoning established satisfiable overlap
+
+PHASE 6 — DUTY / WORKFLOW DEPENDENCIES
+Detect:
+- circular_approval_dependency
+- workflow_cycle_conflict
+- incomplete workflow handling
+- impossible duty ordering
+
+Examples:
+- A requires B, B requires C, C requires A
+- "approved requests proceed" with no denial handling -> quality issue, not necessarily semantic conflict
+
+==================================================
+VI. DECISION AND RESOLUTION
+==================================================
+
+Decision logic:
+- REJECT if any semantic_conflict is found
+- REJECT if any critical quality_issue is found
+- APPROVE only if no semantic conflicts exist and no critical quality issue blocks enforceability
+
+Conflict resolution:
+If conflict(r1, r2) holds, also report the recommended resolution outcome:
+- if conflict_resolution_mode = odrl:perm      -> permission prevails
+- if conflict_resolution_mode = odrl:prohibit  -> prohibition prevails
+- if conflict_resolution_mode = odrl:invalid   -> policy becomes void
+- if conflict_resolution_mode is absent        -> default to odrl:invalid
+
+==================================================
+VII. RISK LEVELS
+==================================================
+
+- Critical: semantic contradiction with clear formal evidence; unbounded vagueness blocking operationalization
+- High: strong conflict with partial but sufficient hierarchy/scope evidence
+- Medium: likely issue, but some hierarchy/taxonomy fact is missing
+- Low: minor quality issue only
+
+==================================================
+VIII. OUTPUT FORMAT
+==================================================
+
+Return valid JSON only.
+
+{{
+  "decision": "APPROVE" | "REJECT",
+  "confidence": 0.0,
+  "risk_level": "Critical" | "High" | "Medium" | "Low",
+  "policies_analyzed": <integer>,
+  "normalized_rules_count": <integer>,
+  "issues": [
+    {{
+      "issue_kind": "semantic_conflict" | "quality_issue",
+      "category": "<short category>",
+      "conflict_type": "<enum or None>",
+      "severity": "Critical" | "High" | "Medium" | "Low",
+      "detected_in_phase": 1 | 2 | 3 | 4 | 5 | 6,
+      "policy_id": "<policy id or array>",
+      "rule_id": "<rule id or array>",
+      "field": "<field or constraint domain>",
+      "formal_test": "<Allen | LIA | RCC-8 | EL | set-intersection | hierarchy-closure | workflow-cycle | None>",
+      "evidence": {{
+        "deontic_pair": "<permission/prohibition/duty>",
+        "action_relation": "<a1 ⊑ a2 | a2 ⊑ a1 | equal | none>",
+        "party_overlap": "<non-empty | empty | uncertain>",
+        "asset_overlap": "<non-empty | empty | uncertain>",
+        "constraint_satisfiability": "<satisfiable | unsatisfiable | uncertain>",
+        "resolution_outcome": "<odrl:perm | odrl:prohibit | odrl:invalid | None>"
+      }},
+      "message": "<clear explanation>",
+      "suggestion": "<specific repair suggestion>"
+    }}
+  ],
+  "recommendations": [
+    "<repair or rewrite recommendation>"
+  ],
+  "reasoning_summary": [
+    "<brief summary of the key formal findings, not chain-of-thought>"
+  ]
+}}
+
+==================================================
+IX. CONFLICT TYPE ENUM
+==================================================
+
+Use the MOST SPECIFIC matching type.
+
+Allowed values:
+1. unmeasurable_terms
+2. numeric_constraint_unsat
+3. temporal_overlap
+4. temporal_expired_policy
+5. temporal_impossible_sequence
+6. spatial_hierarchy_conflict
+7. spatial_overlap_conflict
+8. concept_taxonomy_conflict
+9. action_hierarchy_conflict
+10. action_subsumption_conflict
+11. role_hierarchy_conflict
+12. party_specification_inconsistency
+13. circular_approval_dependency
+14. workflow_cycle_conflict
+15. None
+
+Important:
+- Use numeric_constraint_unsat for scalar inequality contradictions
+- Use concept_taxonomy_conflict for purpose/industry/language/deliveryChannel disjointness
+- Use temporal_overlap only for contradictory permission/prohibition rules with temporally overlapping applicability
+- Use spatial_hierarchy_conflict when one geographic scope subsumes the other and makes contradictory rules jointly applicable
+- Use spatial_overlap_conflict for non-hierarchical geographic overlap leading to contradictory applicability
+
+==================================================
+X. POLICY TEXT TO ANALYZE
+==================================================
 {policy_text}
-```
 
----
-**CRITICAL INSTRUCTIONS:**
-1. Work through all 6 phases in order: Policy Level → Rule Level → Constraint Level
-2. Phase 1 first — any vagueness → immediate HIGH severity, REJECT
-3. Phase 5 — classify EVERY temporal pair under Allen's 13 relations before deciding
-4. Every issue MUST have detected_in_phase set to the matching phase number (1–6)
-5. Analyze the ENTIRE policy set as one system
-6. Do NOT assume domain-specific logic - detect contradictions universally
-7. Return structured JSON with all detected issues
-
-Return valid JSON with: decision, confidence, issues, recommendations, reasoning, risk_level, policies_analyzed.
+CRITICAL INSTRUCTIONS:
+1. Normalize first, then reason.
+2. Do not report a rule-level deontic conflict unless all five conflict conditions hold.
+3. Separate semantic_conflict from quality_issue.
+4. Use domain-specific formal tests:
+   - numeric -> LIA / scalar inequality satisfiability
+   - temporal -> Allen + endpoint/duration arithmetic
+   - spatial -> RCC-8 + geographic subsumption
+   - concept -> EL-style taxonomy overlap/disjointness
+5. Do not over-flag bounded universal quantifiers as vague.
+6. Do not hallucinate hierarchies or disjointness not supported by the input or explicit semantic facts.
+7. Return valid JSON only.
 """
 
 
@@ -547,6 +654,35 @@ class Reasoner:
         except (TypeError, ValueError):
             return default
 
+    @staticmethod
+    def _coerce_policy_id(value: object) -> Optional[str]:
+        """Normalize policy_id: lists/tuples use the first element as str (per prompt schema)."""
+        if value is None or value == "":
+            return None
+        if isinstance(value, (list, tuple)):
+            if not value:
+                return None
+            first = value[0]
+            return None if first is None else str(first)
+        return str(value)
+
+    @staticmethod
+    def _coerce_detected_phase(value: object) -> int:
+        """LLMs often emit floats; JSON may use null."""
+        if value is None:
+            return 0
+        try:
+            if isinstance(value, bool):
+                return int(value)
+            if isinstance(value, (int, float)):
+                return int(value)
+            text = str(value).strip()
+            if not text:
+                return 0
+            return int(float(text))
+        except (TypeError, ValueError):
+            return 0
+
     @classmethod
     def _format_confidence_percent(cls, value: object) -> str:
         """Format confidence robustly for logs, never raising."""
@@ -574,33 +710,48 @@ class Reasoner:
             issues = []
             for issue_dict in result.get("issues", []):
                 try:
-                    raw_conflict_type = issue_dict.get("conflict_type")
-                    # Only conflict_type is treated as the authoritative conflict signal.
-                    # If conflict_type is None/empty, treat as "no conflict" and skip.
-                    if raw_conflict_type in (None, "", "None", "none", "null", "NULL"):
+                    # Prompt asks for both category and conflict_type; models often fill only one.
+                    raw_signal = None
+                    for key in ("conflict_type", "category"):
+                        candidate = issue_dict.get(key)
+                        if candidate in (None, "", "None", "none", "null", "NULL"):
+                            continue
+                        raw_signal = candidate
+                        break
+                    if raw_signal is None:
                         continue
 
-                    resolved_conflict = self._normalize_conflict_type(raw_conflict_type)
+                    resolved_conflict = self._normalize_conflict_type(raw_signal)
                     if not resolved_conflict:
                         logger.error(
                             "Unknown conflict_type in issue: "
-                            f"conflict_type={raw_conflict_type!r}, issue={issue_dict}"
+                            f"signal={raw_signal!r}, issue={issue_dict}"
                         )
                         continue
 
-                    severity = str(issue_dict.get("severity", "low")).lower()
-                    if severity not in {"high", "low"}:
+                    severity = str(issue_dict.get("severity", "low")).lower().strip()
+                    if severity in ("critical", "high"):
+                        severity = "high"
+                    else:
                         severity = "low"
+
+                    field_val = issue_dict.get("field") or "unknown"
+                    message_val = issue_dict.get("message") or "Conflict detected"
+                    suggestion_val = issue_dict.get("suggestion")
+                    if suggestion_val is not None:
+                        suggestion_val = str(suggestion_val)
 
                     issues.append(DetectedIssue(
                         category=resolved_conflict,
                         conflict_type=resolved_conflict,
                         severity=severity,
-                        field=issue_dict.get("field", "unknown"),
-                        policy_id=issue_dict.get("policy_id"),
-                        message=issue_dict.get("message", "Conflict detected"),
-                        suggestion=issue_dict.get("suggestion"),
-                        detected_in_phase=issue_dict.get("detected_in_phase", 0)
+                        field=str(field_val),
+                        policy_id=self._coerce_policy_id(issue_dict.get("policy_id")),
+                        message=str(message_val),
+                        suggestion=suggestion_val,
+                        detected_in_phase=self._coerce_detected_phase(
+                            issue_dict.get("detected_in_phase", 0)
+                        ),
                     ))
                 except Exception as e:
                     logger.error(f"Failed to parse issue: {e}")
