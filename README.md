@@ -46,7 +46,7 @@ f_validate : (y', s) -> y
 ```
 
 Where:
-- `d` is a decision in `{approve, reject, needs_input}`,
+- `d` is a decision in `{approve, reject}` as returned by `Reasoner.reason()` (parsed model output),
 - `y'` is draft Turtle,
 - `y` is final validated Turtle after up to 3 repair attempts.
 
@@ -120,6 +120,24 @@ Behavior:
 
 ## Quick API Usage
 
+**Previous README snippet issues (now fixed below):**
+
+- `Reasoner.reason()` only yields `decision` values **`approve`** or **`reject`**. Checking `"needs_input"` does nothing because that value is never produced by this agent (evaluation scripts use `needs_input` only as a fallback when a field is missing).
+- Example policies with an **end date in the past** relative to the reasoner’s “current date” (see `SINGLE_SHOT_REASONING_PROMPT` in `reasoner_agent.py`) are often classified as **`reject`** (e.g. expired temporal scope), so the sample would raise before generation.
+- Entries in `custom_models.json` use **`model_id`**; the Python agents expect the keyword **`model`**. Map the field when building `cfg`.
+
+**How to run:** from the repository root, with dependencies installed (`uv sync`), use the same interpreter uv manages:
+
+```bash
+cd semantic-policy-generation
+uv sync
+uv run python your_script.py
+```
+
+If you paste the example into `quick_api_demo.py` at the repo root, `uv run python quick_api_demo.py` is enough.
+
+**Example (inline credentials):**
+
 ```python
 from agents.reasoner.reasoner_agent import Reasoner
 from agents.generator.generator import Generator
@@ -127,6 +145,7 @@ from agents.validator.validator_agent import ValidatorAgent
 
 cfg = {
     "api_key": "YOUR_API_KEY",
+    # Many OpenAI-compatible servers accept either host root or .../v1; try the form your provider documents.
     "base_url": "https://your-openai-compatible-endpoint/v1",
     "model": "your-model-id",
 }
@@ -135,10 +154,11 @@ reasoner = Reasoner(**cfg, temperature=0.0)
 generator = Generator(**cfg, temperature=0.0)
 validator = ValidatorAgent(**cfg, temperature=0.0)
 
-policy_text = "UC4 partners may use dataset A for research until 2025-12-31."
+# Use an end date still in the future w.r.t. when you run this, or the reasoner may reject as expired.
+policy_text = "UC4 partners may use dataset A for research until 2030-12-31."
 
 reason = reasoner.reason(policy_text)
-if reason["decision"] not in {"approve", "needs_input"}:
+if reason["decision"] != "approve":
     raise ValueError(f"Rejected by reasoner: {reason['issues']}")
 
 draft = generator.generate(policy_text, policy_id="example_001")
@@ -148,6 +168,48 @@ final = validator.validate_and_regenerate(
     max_attempts=3,
 )
 
+print(final["success"])
+print(final["final_odrl"])
+```
+
+**Example (load `evaluation/openai-apis/custom_models.json`):**
+
+```python
+import json
+from pathlib import Path
+
+from agents.reasoner.reasoner_agent import Reasoner
+from agents.generator.generator import Generator
+from agents.validator.validator_agent import ValidatorAgent
+
+repo_root = Path(__file__).resolve().parent  # or Path.cwd() if you always run from repo root
+entry = next(
+    e
+    for e in json.loads((repo_root / "evaluation/openai-apis/custom_models.json").read_text())
+    if e["model_id"] == "deepseek-chat"  # or pick the first entry, etc.
+)
+
+cfg = {
+    "api_key": entry["api_key"],
+    "base_url": entry["base_url"].rstrip("/"),
+    "model": entry["model_id"],
+}
+
+reasoner = Reasoner(**cfg, temperature=0.0)
+generator = Generator(**cfg, temperature=0.0)
+validator = ValidatorAgent(**cfg, temperature=0.0)
+
+policy_text = "UC4 partners may use dataset A for research until 2030-12-31."
+reason = reasoner.reason(policy_text)
+if reason["decision"] != "approve":
+    raise ValueError(f"Rejected by reasoner: {reason['issues']}")
+
+draft = generator.generate(policy_text, policy_id="example_001")
+final = validator.validate_and_regenerate(
+    policy_text=policy_text,
+    odrl_turtle=draft["odrl_turtle"],
+    max_attempts=3,
+)
 print(final["success"])
 print(final["final_odrl"])
 ```

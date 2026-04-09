@@ -1,12 +1,10 @@
-# evaluation/test_pipeline.py
-
 """
-End-to-End Pipeline Evaluation
+End-to-End Pipeline Evaluation (root entrypoint)
 Tests: Reasoner → Generator → Validator
 """
 
+import argparse
 import json
-import os
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Dict, Any
@@ -15,9 +13,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).resolve().parent
 sys.path.insert(0, str(project_root))
 
+from evaluation.model_config_loader import load_model_config
 from agents.reasoner.reasoner_agent import Reasoner
 from agents.generator.generator import Generator
 from agents.validator.validator_agent import ValidatorAgent
@@ -37,15 +36,15 @@ class PipelineResult:
     # Generator stage (only if approved)
     generator_ran: bool
     odrl_generated: bool
-    odrl_turtle: str = ""
     
     # Validator stage (only if generated)
     validator_ran: bool
     validation_passed: bool
-    validation_attempts: int = 0
     
     # Overall success
     pipeline_success: bool  # True if: approved → generated → validated
+    validation_attempts: int = 0
+    odrl_turtle: str = ""
     
 
 @dataclass
@@ -263,40 +262,40 @@ def print_pipeline_results(metrics: PipelineMetrics):
         print(f"   Cost savings: ~{cost_savings:.1f}% vs always using max attempts")
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run end-to-end pipeline evaluation.")
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        default=None,
+        help="Model id from evaluation/openai-apis/custom_models.json. "
+        "If omitted, uses the first model in that file.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
     print("="*100)
     print("END-TO-END PIPELINE EVALUATION")
     print("="*100)
     
-    # Load config
-    base_url = os.getenv("LLM_BASE_URL")
-    api_key = os.getenv("LLM_API_KEY")
-    model = os.getenv("LLM_MODEL")
-    
-    # For Azure (GPT-4o), use these instead:
-    use_azure = True  # Set to False for Fraunhofer models
-    
-    if use_azure:
-        azure_config = {
-            "api_key": "xxxx",
-            "api_version": "2024-10-01-preview",
-            "azure_endpoint": "https://fhgenie-api-fit-ems30127.openai.azure.com/",
-            "model": "gpt-4o-2024-11-20"
-        }
-        model_name = "GPT-4o (Azure)"
-    else:
-        azure_config = {
-            "api_key": api_key,
-            "base_url": base_url,
-            "model": model
-        }
-        model_name = model
-    
+    model_config = load_model_config(args.model_id)
+    temperature = float(model_config.get("temperature_default", 0))
+    llm_config = {
+        "api_key": model_config["api_key"],
+        "base_url": model_config["base_url"],
+        "model": model_config["model_id"],
+    }
+    model_name = model_config["model_id"]
+
     print(f"\nConfiguration:")
     print(f"   Model: {model_name}")
+    print(f"   Base URL: {model_config['base_url']}")
     
     # Load ONLY approved policies (since we're testing generation)
-    approved_file = Path("data/approved_policies/approved_policies_unified.json")
+    approved_file = Path("data/approved_policies/approved_policies_dataset.json")
     
     if not approved_file.exists():
         print(f"\n Error: {approved_file} not found")
@@ -310,9 +309,9 @@ def main():
     # Initialize all three agents
     print(f"\nInitializing pipeline agents...")
     
-    reasoner = Reasoner(**azure_config, temperature=0.0)
-    generator = Generator(**azure_config, temperature=0.0)
-    validator = ValidatorAgent(**azure_config, temperature=0.0)
+    reasoner = Reasoner(**llm_config, temperature=temperature)
+    generator = Generator(**llm_config, temperature=temperature)
+    validator = ValidatorAgent(**llm_config, temperature=temperature)
     
     print("   Reasoner initialized")
     print("   Generator initialized")
