@@ -81,7 +81,7 @@ semantic-policy-generation/
 ## Requirements
 
 - Linux/macOS (tested in Linux environments)
-- Python `>=3.13` (from `pyproject.toml`)
+- **Python 3.13+** to execute this codebase (`requires-python >= 3.13` in `pyproject.toml`). If your system `python3` is older, use **`uv`**: after `uv sync`, run all documented commands with **`uv run …`** so they use the interpreter and environment uv resolves for this project (typically 3.13), instead of calling `python` directly on the host.
 - [`uv`](https://docs.astral.sh/uv/) for environment and dependency management
 - Access to either:
   - Azure OpenAI deployment, or
@@ -115,7 +115,7 @@ cp evaluation/openai-apis/example_models.json evaluation/openai-apis/custom_mode
 Then edit each model entry (`base_url`, `model_id`, `api_key`) with your actual credentials/endpoints.
 
 Behavior:
-- If `--model-id` is omitted, the **first** entry in `custom_models.json` is used.
+- If `--model-id` is omitted, the **first** entry in `custom_models.json` is used. The template’s first entry is `azure-gpt-4.1`; configure it, **reorder** the array so your preferred model is first, or pass `--model-id` explicitly (as in the evaluation examples).
 - If `--model-id` is provided, it must match an existing `model_id` entry.
 
 ## Quick API Usage
@@ -154,7 +154,7 @@ print(final["final_odrl"])
 
 ## Reproducing Core Paper Experiments
 
-### 1) Reasoning Agent Evaluation (150 policies)
+### 1) Reasoning Agent Evaluation (139 policies)
 
 ```bash
 # Evaluate all approved+rejected policies
@@ -205,7 +205,7 @@ These files are the primary artifact interface for downstream analysis and table
 ### Benchmark A (Reasoning + Pipeline)
 - `data/rejected_policies/rejected_policies_dataset.json`
 - `data/approved_policies/approved_policies_dataset.json`
-- Total: 150 policies (67 rejected / 83 approved)
+- Total: 139 policies (67 rejected / 72 approved), counted as entries in each file’s `policies` array
 
 Conflict-type distribution in rejected split:
 - vagueness: 17
@@ -241,18 +241,15 @@ Use the commands above to regenerate corresponding stage-level metrics.
 - Treat outputs as decision support artifacts, not legal guarantees.
 - Keep API keys out of version control (`custom_models.json` is local by design).
 
-## Submission Metadata (To Be Completed)
+## Submission Metadata 
 
 Fill these fields when preparing the final submission package:
 
-- **Authors:** `[Author 1]`, `[Author 2]`, `[Author 3]`
-- **Affiliations:** `[Institution / Lab]`
-- **Contact Email:** `[corresponding-author@email]`
+- **Authors:** `[Daham M. Mustafa]`, `[Yixin Peng]`, `[Diego Collarana]`, `[Stefan Decker]`
+- **Affiliations:** `[RWTH Aachen University / Fraunhofer FIT, Aachen / Sankt Augustin, DE]`
+- **Contact Email:** `[daham.mustafa@rwth-aachen.de]`
 - **Paper Venue/Track:** `[Conference Name, Track]`
-- **Paper Identifier:** `[Submission ID / DOI when available]`
-- **Project Homepage:** `[URL to be added]`
-- **Endpoint Freeze Date:** `[YYYY-MM-DD]`
-- **Artifact Version Tag:** `[git tag or release]`
+- **Endpoint Freeze Date:** `[10-April-2026]`
 
 ## License
 
