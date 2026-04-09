@@ -111,6 +111,7 @@ evaluation/openai-apis/custom_models.json
 data/paper/
 agents/reasoner/reasoner_agent_old_old.py
 agents/reasoner/reasoner_agent_old.py
+agents/reasoner/reasoner_agent_new_idea.py
 evaluation/demo_parallel_reasoner_eval.py
 evaluation/diagnose_failed_models.py
 evaluation/smoke_test_reasoner_models.py
