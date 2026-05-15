@@ -91,14 +91,8 @@ Written to `evaluation/results/`:
 ## Datasets
 
 **Benchmark A — Reasoning + Pipeline (139 policies)**
-- `data/approved_policies/approved_policies_dataset.json` (72)
-- `data/rejected_policies/rejected_policies_dataset.json` (67)
-
-Rejected-split conflict types: vagueness (17), temporal (21), spatial (3), action hierarchy (13), role hierarchy (7), circular dependency (6).
-
-**Benchmark B — Input-to-Policy (50 samples)**
-- `data/text2policy/text2ttl_GT.jsonl`
-
+- `data/approved_policies/approved_policies_dataset.json` 
+- `data/rejected_policies/rejected_policies_dataset.json` 
 ## License
 
 MIT.
