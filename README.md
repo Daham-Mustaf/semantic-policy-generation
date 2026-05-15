@@ -3,12 +3,13 @@
 Code repository for the paper:
 **"Intent-to-Policy: An Ontology-Grounded Agentic AI System for Reliable ODRL Generation and Validation"**
 
+> **Anonymized supplementary material for peer review.** Author names, affiliations, and contact details have been removed for double-blind submission.
+
 ## What This Repository Provides
 
 This repository implements a three-agent pipeline that converts natural language policy requirements into validated W3C ODRL 2.2 Turtle.
 
 Pipeline:
-
 ```text
 Natural language policy
   -> Reasoning Agent (conflict detection)
@@ -93,8 +94,8 @@ semantic-policy-generation/
 # 1) Install uv (if needed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2) Clone and enter repo
-git clone https://github.com/Daham-Mustaf/semantic-policy-generation.git
+# 2) Obtain the (anonymized) repository and enter it
+#    Download the supplementary archive from the review system, then:
 cd semantic-policy-generation
 
 # 3) Install project dependencies
@@ -107,7 +108,6 @@ All evaluation scripts load model endpoints from:
 `evaluation/openai-apis/custom_models.json`
 
 Create it from template:
-
 ```bash
 cp evaluation/openai-apis/example_models.json evaluation/openai-apis/custom_models.json
 ```
@@ -115,15 +115,14 @@ cp evaluation/openai-apis/example_models.json evaluation/openai-apis/custom_mode
 Then edit each model entry (`base_url`, `model_id`, `api_key`) with your actual credentials/endpoints.
 
 Behavior:
-- If `--model-id` is omitted, the **first** entry in `custom_models.json` is used. The template’s first entry is `azure-gpt-4.1`; configure it, **reorder** the array so your preferred model is first, or pass `--model-id` explicitly (as in the evaluation examples).
+- If `--model-id` is omitted, the **first** entry in `custom_models.json` is used. The template's first entry is `azure-gpt-4.1`; configure it, **reorder** the array so your preferred model is first, or pass `--model-id` explicitly (as in the evaluation examples).
 - If `--model-id` is provided, it must match an existing `model_id` entry.
 
 ## Quick API Usage
 
-**Previous README snippet issues (now fixed below):**
-
+**Notes on common pitfalls:**
 - `Reasoner.reason()` only yields `decision` values **`approve`** or **`reject`**. Checking `"needs_input"` does nothing because that value is never produced by this agent (evaluation scripts use `needs_input` only as a fallback when a field is missing).
-- Example policies with an **end date in the past** relative to the reasoner’s “current date” (see `SINGLE_SHOT_REASONING_PROMPT` in `reasoner_agent.py`) are often classified as **`reject`** (e.g. expired temporal scope), so the sample would raise before generation.
+- Example policies with an **end date in the past** relative to the reasoner's "current date" (see `SINGLE_SHOT_REASONING_PROMPT` in `reasoner_agent.py`) are often classified as **`reject`** (e.g. expired temporal scope), so a sample with a past date would raise before generation.
 - Entries in `custom_models.json` use **`model_id`**; the Python agents expect the keyword **`model`**. Map the field when building `cfg`.
 
 **How to run:** from the repository root, with dependencies installed (`uv sync`), use the same interpreter uv manages:
@@ -167,7 +166,6 @@ final = validator.validate_and_regenerate(
     odrl_turtle=draft["odrl_turtle"],
     max_attempts=3,
 )
-
 print(final["success"])
 print(final["final_odrl"])
 ```
@@ -177,7 +175,6 @@ print(final["final_odrl"])
 ```python
 import json
 from pathlib import Path
-
 from agents.reasoner.reasoner_agent import Reasoner
 from agents.generator.generator import Generator
 from agents.validator.validator_agent import ValidatorAgent
@@ -200,6 +197,7 @@ generator = Generator(**cfg, temperature=0.0)
 validator = ValidatorAgent(**cfg, temperature=0.0)
 
 policy_text = "UC4 partners may use dataset A for research until 2030-12-31."
+
 reason = reasoner.reason(policy_text)
 if reason["decision"] != "approve":
     raise ValueError(f"Rejected by reasoner: {reason['issues']}")
@@ -227,7 +225,6 @@ uv run python evaluation/evaluate_reasoning_agent.py --model-id deepseek-chat
 ```
 
 Optional slicing:
-
 ```bash
 uv run python evaluation/evaluate_reasoning_agent.py --start 0 --limit 50
 ```
@@ -267,7 +264,7 @@ These files are the primary artifact interface for downstream analysis and table
 ### Benchmark A (Reasoning + Pipeline)
 - `data/rejected_policies/rejected_policies_dataset.json`
 - `data/approved_policies/approved_policies_dataset.json`
-- Total: 139 policies (67 rejected / 72 approved), counted as entries in each file’s `policies` array
+- Total: 139 policies (67 rejected / 72 approved), counted as entries in each file's `policies` array
 
 Conflict-type distribution in rejected split:
 - vagueness: 17
@@ -290,28 +287,11 @@ As reported in the manuscript:
 
 Use the commands above to regenerate corresponding stage-level metrics.
 
-## Limitations
-
-- Conflict detection still depends on LLM reasoning quality.
-- Spatial reasoning may rely on implicit world knowledge unless explicitly grounded.
-- Metrics can vary with endpoint/model updates even under fixed prompts.
-- Current benchmark setup focuses on single-policy inputs (cross-policy reasoning is future work).
-
 ## Responsible Use
 
 - Do not use generated policies without domain/legal review in production enforcement systems.
 - Treat outputs as decision support artifacts, not legal guarantees.
 - Keep API keys out of version control (`custom_models.json` is local by design).
-
-## Submission Metadata 
-
-Fill these fields when preparing the final submission package:
-
-- **Authors:** `[Daham M. Mustafa]`, `[Yixin Peng]`, `[Diego Collarana]`, `[Stefan Decker]`
-- **Affiliations:** `[RWTH Aachen University / Fraunhofer FIT, Aachen / Sankt Augustin, DE]`
-- **Contact Email:** `[daham.mustafa@rwth-aachen.de]`
-- **Paper Venue/Track:** `[Conference Name, Track]`
-- **Endpoint Freeze Date:** `[10-April-2026]`
 
 ## License
 
